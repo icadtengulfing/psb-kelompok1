@@ -208,7 +208,7 @@ $foto_profil_path = (!empty($user_data['foto_profil']) && $user_data['foto_profi
                         alt="user photo">
                     <div class="flex flex-col">
                         <span class="text-[var(--txt-primary)] font-bold"><?php echo htmlspecialchars($user_data['nama_lengkap_ortu']); ?></span>
-                        <span class="text-[var(--txt-primary)] font-normal text-start">><?php echo htmlspecialchars($nik); ?></span>
+                        <span class="text-[var(--txt-primary)] font-normal text-start"><?php echo htmlspecialchars($nik); ?></span>
                     </div>
                     <!-- <svg class="w-4 h-4 ms-auto text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
                         aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">

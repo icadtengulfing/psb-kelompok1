@@ -1,3 +1,22 @@
+<?php
+session_start();
+if (!isset($_SESSION['nik'])) {
+  header('Location: ../form-login.php');
+  exit;
+}
+$nama = $_SESSION['nama'] ?? 'Pengguna';
+$nik  = $_SESSION['nik'] ?? '';
+
+include 'koneksi.php';
+
+$query = "SELECT * FROM pendaftar WHERE nik = '$nik'";
+$result = mysqli_query($koneksi, $query);
+$user_data = mysqli_fetch_assoc($result);
+
+$foto_profil_path = (!empty($user_data['foto_profil']) && $user_data['foto_profil'] != 'default-profile.jpg') 
+                   ? "uploads/" . $user_data['foto_profil'] 
+                   : "../assets/img/default-profile.jpg";
+?>
 <!doctype html>
 <html>
 
@@ -185,11 +204,11 @@
                 <a href="edit-profile.php"
                     class="cursor-pointer flex items-center w-full text-sm rounded-xl hover:shadow-md group hover:bg-[var(--bg-primary2)]/10 px-4 py-3 transition duration-400"
                     data-dropdown-toggle="dropdown-user-sidebar">
-                    <img class="w-8 h-8 rounded-full me-3 shadow-md" src="../assets/img/default-profile.jpg"
+                    <img class="w-8 h-8 rounded-full me-3 shadow-md" src="<?php echo htmlspecialchars($foto_profil_path); ?>"
                         alt="user photo">
                     <div class="flex flex-col">
-                        <span class="text-[var(--txt-primary)] font-bold">Lorem Ipsum Dolor</span>
-                        <span class="text-[var(--txt-primary)] font-normal text-start">103080238402</span>
+                        <span class="text-[var(--txt-primary)] font-bold"><?php echo htmlspecialchars($user_data['nama_lengkap_ortu']); ?></span>
+                        <span class="text-[var(--txt-primary)] font-normal text-start"><?php echo htmlspecialchars($nik); ?></span>
                     </div>
                     <!-- <svg class="w-4 h-4 ms-auto text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
                         aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
