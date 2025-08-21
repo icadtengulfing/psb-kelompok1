@@ -1,5 +1,6 @@
 <?php
 session_start();
+include '../koneksi.php';
 if (!isset($_SESSION['nik'])) {
   header('Location: ../form-login.php');
   exit;
@@ -8,7 +9,6 @@ $nama = $_SESSION['nama'] ?? 'Pengguna';
 $nik = $_SESSION['nik'] ?? '';
 $message = '';
 $error = '';
-include '../koneksi.php';
 
 $query = "SELECT * FROM pendaftar WHERE nik = '$nik'";
 $result = mysqli_query($koneksi, $query);
@@ -57,17 +57,42 @@ $tanggal_lahir_mysql = NULL;
 
 if (!empty($tanggal_lahir)) {
     $timestamp = strtotime($tanggal_lahir);
-    
+
     if ($timestamp !== false) {
         $tanggal_lahir_mysql = date('Y-m-d', $timestamp);
     }
-} 
+}
 
 $query_siswa = "INSERT INTO siswa (nis, id_pendaftar, id_jalur, nama_lengkap_siswa, nik_siswa, nisn, asal_sekolah, alamat, tempat_lahir, tanggal_lahir) 
                 VALUES ('$nis', '$id_pendaftar', '$id_jalur', '$nama_lengkap_siswa', '$nik_siswa', '$nisn', '$asal_sekolah', '$alamat', '$tempat_lahir', '$tanggal_lahir_mysql')";
 $result = mysqli_query($koneksi, $query_siswa);
 
 if ($result) {
+    $_SESSION['alert_message'] = 
+     '<div id="alert-3" class="flex items-center p-4 mb-4 text-green-700 rounded-lg bg-green-100 border border-green-200" role="alert">
+  <svg class="shrink-0 w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+    <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+  </svg>
+  <span class="sr-only">Info</span>
+  <div class="ms-3 text-md font-medium">
+    Data Berhasil Dikirim!
+  </div>
+  <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-green-100 text-green-600 rounded-lg focus:ring-2 focus:ring-green-300 p-1.5 hover:bg-green-200 inline-flex items-center justify-center h-8 w-8" data-dismiss-target="#alert-3" aria-label="Close">
+    <span class="sr-only">Close</span>
+    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+    </svg>
+  </button>
+</div>';
+    } else {
+        $_SESSION['alert_message'] = '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Gagal!</strong> Terjadi kesalahan saat memperbarui data.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>';
+    }
+    header("Location: reguler.php");
+    exit;
+
     $input_files = [
         'kartuKeluarga' => 'Kartu Keluarga',
         'ijazahSmp' => 'Ijazah SMP', 
@@ -76,6 +101,7 @@ if ($result) {
         'pasFoto' => 'Pas Foto',
         'SKCK' => 'SKCK'
     ];
+
 
     $upload_errors = [];
     $upload_success = [];
@@ -100,7 +126,7 @@ if ($result) {
                 $upload_errors[] = "Format file $jenis_dokumen tidak valid.";
                 continue;
             }
-            
+
             // Validasi ukuran file (max 2MB)
             if ($_FILES[$input_name]['size'] > 2 * 1024 * 1024) {
                 $upload_errors[] = "Ukuran file $jenis_dokumen terlalu besar.";
@@ -133,7 +159,6 @@ if ($result) {
          }
        }
    }
-}
 ?>
 <!doctype html>
 <html>
@@ -375,6 +400,14 @@ if ($result) {
 
     <section class="p-4 lg:p-8 sm:ml-64">
         <div class="mt-26 lg:mt-24">
+            <?php if (isset($_SESSION['alert_message'])): ?>
+            <div class="alert-message w-full mb-4">
+                <?php 
+                echo $_SESSION['alert_message']; 
+                unset($_SESSION['alert_message']); // Hapus pesan setelah ditampilkan
+                ?>
+            </div>
+        <?php endif; ?>
             <div class="grid grid-cols-1 xl:grid-cols-[3fr_1fr] gap-4 lg:gap-8 mb-8">
                 <div
                     class="flex flex-col justify-center items-start p-6 lg:p-12 rounded-xl bg-[var(--bg-primary3)] border border-[var(--bg-primary2)]/30 shadow-md">

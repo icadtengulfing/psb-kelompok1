@@ -4,75 +4,7 @@ if(!isset($_SESSION['username'])) {
     header('location: index.php');
     exit;
 }
-include '../koneksi.php';
-
-if (!isset($_POST['Tambah'])) {
-      $target_dir = "../dashboard/uploads/";
-    
-    // Buat folder uploads jika belum ada
-    if (!file_exists($target_dir)) {
-        mkdir($target_dir, 0755, true);
-    }
-    
-    $file = $_FILES['foto_profil'];
-    $file_name = $file['name'];
-    $file_tmp = $file['tmp_name'];
-    $file_size = $file['size'];
-    $file_error = $file['error'];
-    
-    if ($file_error === 0) {
-        // Validasi ukuran file (maksimal 2MB)
-        if ($file_size <= 2097152) { // 2MB = 2097152 bytes
-            
-            // Validasi ekstensi file
-            $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
-            $allowed_ext = array('jpg', 'jpeg', 'png');
-            
-            if (in_array($file_ext, $allowed_ext)) {
-                // Generate nama file unik
-                $new_file_name = $nik . '_' . time() . '.' . $file_ext;
-                $target_file = $target_dir . $new_file_name;
-                // Upload file
-                if (move_uploaded_file($file_tmp, $target_file)) {
-                    // Hapus foto lama jika bukan default
-                    if ($user_data['foto_profil'] != 'default-profile.jpg' && 
-                        file_exists($target_dir . $user_data['foto_profil'])) {
-                        unlink($target_dir . $user_data['foto_profil']);
-                    }
-                    // Update database
-                    $update_query = "UPDATE pendaftar SET foto_profil = '$new_file_name' WHERE nik = '$nik'";
-                    
-                    if (mysqli_query($koneksi, $update_query)) {
-                        $message = "Foto profil berhasil diubah!";
-                        $user_data['foto_profil'] = $new_file_name;
-                    } else {
-                        $error = "Gagal mengupdate database!";
-                        unlink($target_file); // Hapus file yang sudah diupload
-                    }
-                } else {
-                    $error = "Gagal mengupload file!";
-                }
-            } else {
-                $error = "Format file tidak diizinkan! Hanya JPG, JPEG, dan PNG.";
-            }
-        } else {
-            $error = "Ukuran file terlalu besar! Maksimal 2MB.";
-        }
-    } else {
-        $error = "Terjadi kesalahan saat mengupload file!";
-    }
-
-    $namaLengkap = $_POST['namaLengkap'];
-    $nik = $_POST['nik'];
-    $password = $_POST['password'];
-    $email = $_POST['email'];
-    $noHp = $_POST['noHp'];
-    $terms = $_POST['terms'];
-
-    $kueri = "INSERT INTO pendaftar (nama_lengkap_ortu, nik, password, email, no_hp)
-VALUES ('$namaLengkap', '$nik', '$password', '$email', '$noHp')";
-
-}
+include '../koneksi.php';  
 ?>
 <!doctype html>
 <html>

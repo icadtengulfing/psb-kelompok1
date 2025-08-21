@@ -16,6 +16,8 @@ $user_data = mysqli_fetch_assoc($result);
 $foto_profil_path = (!empty($user_data['foto_profil']) && $user_data['foto_profil'] != 'default-profile.jpg') 
                    ? "uploads/" . $user_data['foto_profil'] 
                    : "../assets/img/default-profile.jpg";
+
+
 ?>
 <!doctype html>
 <html>
