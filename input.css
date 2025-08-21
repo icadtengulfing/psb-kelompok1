@@ -1,0 +1,37 @@
+@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
+@layer base {
+  :root {
+    scroll-padding-top: 80px;
+    scroll-behavior: smooth;
+
+    --font-inter: "Inter" Arial, Helvetica, sans-serif;
+
+    --bg-primary: #f3f9ff;  
+    --bg-primary2: #243956;
+    --bg-primary3: #ffffff;
+
+    --bg-secondary: #50463c;
+    --bg-secondary2: #dbdabe;
+    --bg-secondary3: #a6b7c9;
+    --bg-secondary4: #6c87a5;
+
+    --txt-primary: #000000;
+    --txt-secondary: #ffffff;
+    --txt-primary2: #243956;
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}

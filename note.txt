@@ -1,0 +1,63 @@
+
+ISI FORM CARD [EDIT DATA]:
+1. DAFTAR AKUN: 
+  - id (gk bisa diubah)
+  - Foto_Profil
+  - Nama
+  - Email
+  - No. HP
+  - NIK (gk bisa diubah)
+  - Password
+
+2. DAFTAR CASIS: 
+  - NIS (gk bisa diubah)
+  - id_pendaftar (gk bisa diubah)
+  - id_jalur (gk bisa diubah)
+  - Nama
+  - NISN (gk bisa diubah)
+  - NIK (gk bisa diubah)
+  - Asal Sekolah
+  - Alamat
+  - Tempat tanggal Lahir
+
+3. DAFTAR KUOTA JALUR: 
+  - id_jalur (gk bisa diubah)
+  - Nama_jalur
+  - Kuota Jalur
+ 
+4. DAFTAR DOKUMEN: 
+  - id_dokumen (gk bisa diubah)
+  - NIS (gk bisa diubah)
+  - Jenis dokumen
+  - File_path
+  - Tanggal Upload (gk bisa diubah)
+  - Catatan
+
+=====================================
+ISI FORM CARD [TAMBAH DATA]:
+1. DAFTAR AKUN: 
+  - Foto_Profil
+  - Nama
+  - Email
+  - No. HP
+  - NIK
+  - Password
+
+2. DAFTAR CASIS: 
+  - Nama
+  - NISN 
+  - NIK 
+  - Asal Sekolah
+  - Alamat
+  - Tempat tanggal Lahir
+
+3. DAFTAR KUOTA JALUR: 
+  - Nama_jalur
+  - Kuota Jalur
+
+4. DAFTAR DOKUMEN: 
+  - NIS = number
+  - Jenis dokumen = text
+  - File_path = file
+  - Tanggal Upload = date
+  - Catatan (Opsional) = text
