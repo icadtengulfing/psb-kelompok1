@@ -37,11 +37,11 @@
 
             <!-- Tombol (DESKTOP) -->
             <div class="hidden sm:flex sm:order-2 space-x-4 rtl:space-x-reverse">
-                <a href="form-daftar.html"
+                <a href="form-daftar.php"
                     class="text-[var(--txt-primary)] focus:ring-3 ring ring-[var(--bg-primary2)] font-medium rounded-lg text-md lg:text-lg px-4 py-2 lg:px-6 lg:py-2.5 text-center dark:bg-transparent hover:bg-[var(--bg-primary2)]/20 hover:cursor-pointer transition hover:shadow-lg">
                     Daftar
                 </a>
-                <a href="form-login.html"
+                <a href="form-login.php"
                     class="focus:ring-3 ring ring-[var(--bg-secondary3)] font-medium rounded-lg text-md lg:text-lg px-4 py-2 lg:px-6 lg:py-2.5 text-center text-[var(--txt-secondary)] bg-[var(--bg-primary2)] hover:bg-[var(--bg-primary2)]/90 hover:cursor-pointer transition shadow-lg">
                     Masuk
                 </a>
@@ -66,11 +66,11 @@
 
                     <!-- TOMBOL DAFTAR & MASUK (MOBILE SAJA) -->
                     <li class="block sm:hidden mt-10 space-y-3">
-                        <a href="form-daftar.html"
+                        <a href="form-daftar.php"
                             class="block w-full text-[var(--txt-primary)] border border-[var(--bg-primary2)]/10 focus:ring-3 ring ring-[var(--bg-primary2)] font-medium rounded-lg text-md px-4 py-2 text-center bg-transparent hover:bg-[var(--bg-primary2)]/20 hover:cursor-pointer transition">
                             Daftar
                         </a>
-                        <a href="form-login.html"
+                        <a href="form-login.php"
                             class="block w-full text-[var(--txt-primary)] border border-[var(--bg-primary2)]/10 focus:ring-3 ring ring-[var(--bg-primary2)] font-medium rounded-lg text-md px-4 py-2 text-center bg-transparent hover:bg-[var(--bg-primary2)]/20 hover:cursor-pointer transition">
                             Masuk
                         </a>
