@@ -1,10 +1,87 @@
 <?php
 session_start();
+include '../koneksi.php';  
 if(!isset($_SESSION['username'])) {
     header('location: index.php');
     exit;
 }
-include '../koneksi.php';  
+
+$order_by = "";
+$search_query = "";
+if (isset($_GET['cari']) && !empty($_GET['cari'])) {
+    $cari = mysqli_real_escape_string($koneksi,$_GET['cari']);
+    $search_query =  " WHERE nama_lengkap_ortu LIKE '%" . $cari . "%' OR email LIKE '%" . $cari . "%'";
+}
+
+if (isset($_GET['sort']) && !empty($_GET['sort'])) {
+    $sort = $_GET['sort'];
+    switch ($sort) {
+        case 'nama_asc':
+            $order_by = "ORDER BY nama_lengkap_ortu";
+            break;
+        case 'nama_desc':
+            $order_by = " ORDER BY nama_lengkap_ortu DESC";
+            break;
+        case 'id_asc':
+            $order_by = " ORDER BY id_pendaftar ASC";
+            break;
+        case 'id_desc':
+            $order_by = " ORDER BY id_pendaftar DESC";
+            break;
+            default:
+        // Tidak ada pengurutan atau nilai tidak valid
+        $order_by = "";
+        break;
+        }
+    }
+    $query = "SELECT * FROM pendaftar";
+        if (!empty($search_query)) {
+            $query .= " " . $search_query;
+        }
+        if (!empty($order_by)) {
+            $query .= " " . $order_by;
+        }
+    $result = mysqli_query($koneksi, $query);
+    $user_data = mysqli_fetch_assoc($result);
+
+    $foto_profil_path = (!empty($user_data['foto_profil']) && $user_data['foto_profil'] != 'default-profile.jpg') 
+                   ? "../dashboard/uploads/" . $user_data['foto_profil'] 
+                   : "..//assets/img/default-profile.jpg";
+
+    if (!$query) {
+        die ('SQL Error: ' . mysqli_error($koneksi));
+    }
+    
+    if (isset($_POST['submit_tambah'])) {
+        $nama_lengkap_ortu = mysqli_real_escape_string($koneksi, $_POST['namaLengkap']);
+        $nik = mysqli_real_escape_string($koneksi, $_POST['nik']);
+        $email = mysqli_real_escape_string($koneksi, $_POST['email']);
+        $password = mysqli_real_escape_string($koneksi, $_POST['password']);
+        $no_hp = mysqli_real_escape_string($koneksi, $_POST['no_hp']);
+
+        $hash_password = password_hash($password, PASSWORD_DEFAULT);
+
+        $foto_profil = 'default-profile.jpg';
+        if(isset($_FILES['fotoProfil']) && $_FILES['fotoProfil']['error'] == 0) {
+            $upload_dir = "../dashboard/uploads/";
+            $file_name = time() . "_" . basename($_FILES['fotoProfil']['name']);
+            $target_file = $upload_dir . $file_name;
+
+            $allowed_types = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (in_array($_FILES['fotoProfil']['type'], $allowed_types)) {
+                if (move_uploaded_file($_FILES['fotoProfil']['tmp_name'], $target_file)) {
+                    $foto_profil = $file_name;
+                }
+            }
+        }
+        $query_tambah = "INSERT INTO pendaftar (foto_profil, nama_lengkap_ortu, email, password, no_hp, nik) VALUES ('$foto_profil', '$nama_lengkap_ortu', '$email', '$hash_password', '$no_hp', '$nik')";
+        if (mysqli_query($koneksi, $query_tambah)) {
+            echo "<script>alert('Data Berhasil Dikirm!'); window.location.reload();</script>";
+            header('location: daftar-akun.php');
+        } else {
+            echo "<script>alert('Error: " . mysqli_error($koneksi) . "');</script>";
+        }
+    }
 ?>
 <!doctype html>
 <html>
@@ -177,38 +254,39 @@ include '../koneksi.php';
                         <div id="dropdownAction" class="z-10 hidden bg-[var(--bg-primary2)] rounded-lg shadow-sm w-42">
                             <ul class="py-1 text-sm text-[var(--txt-secondary)]" aria-labelledby="dropdownActionButton">
                                 <li>
-                                    <a href="#" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
+                                    <a href="?sort=nama_asc" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
                                         Awal ke akhir (A - Z)
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="#" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
+                                    <a href="?sort=nama_desc" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
                                         Akhir ke awal (Z - A)
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="#" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
+                                    <a href="?sort=id_asc" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
                                         Awal ke akhir (ID)
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="#" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
+                                    <a href="?sort=id_desc" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
                                         Akhir ke awal (ID)
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="#" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
+                                    <a href="?sort=tanggal_asc" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
                                         Tanggal terlama
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="#" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
+                                    <a href="?sort=tanggal_desc" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
                                         Tanggal terbaru
                                     </a>
                                 </li>
                             </ul>
                         </div>
                     </div>
+                    <form action="" method="GET">
                     <label for="table-search" class="sr-only">Search</label>
                     <div class="relative">
                         <div
@@ -219,10 +297,11 @@ include '../koneksi.php';
                                     stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
                             </svg>
                         </div>
-                        <input type="text" id="table-search-users"
+                        <input type="text" id="table-search-users" name="cari"
                             class="block p-2 ps-10 text-md text-[var(--txt-primary)] border border-[var(--txt-primary)]/30 bg-[var(--bg-primary3)] rounded-lg w-full lg:w-100 focus:ring-0"
                             placeholder="Cari Data Akun">
                     </div>
+                    </form>
                     <button type="button" data-modal-target="modalTambah" data-modal-toggle="modalTambah"
                         class="w-full sm:w-auto focus:outline-none text-[var(--txt-secondary)] bg-[var(--bg-primary2)] hover:bg-[var(--bg-primary2)]/90 hover:cursor-pointer transition duration-500 shadow-md font-medium rounded-lg text-sm px-5 py-2.5">Tambah
                         +</button>
@@ -230,7 +309,8 @@ include '../koneksi.php';
 
                 <div
                     class="overflow-x-auto sm:rounded-lg border border-[var(--txt-primary)]/30 bg-[var(--bg-primary3)] shadow-md mt-2">
-                    <table class="w-full text-md text-left rtl:text-right text-[var(--txt-primary)] ">
+                   <?php echo
+                    '<table class="w-full text-md text-left rtl:text-right text-[var(--txt-primary)] ">
                         <thead class="text-lg text-[var(--txt-primary)] uppercase bg-[var(--bg-primary2)]/10">
                             <tr>
                                 <th scope="col" class="px-6 py-3">
@@ -253,33 +333,34 @@ include '../koneksi.php';
                                 </th>
                             </tr>
                         </thead>
-                        <tbody>
-                            
-                            <tr class="border-t border-[var(--txt-primary)]/10">
+                        <tbody>';
+                            while ($row = mysqli_fetch_assoc($result))
+                            {
+                            echo '<tr class="border-t border-[var(--txt-primary)]/10">
                                 <td class="w-4 p-4" align="center">
-                                    1
+                                    '.htmlspecialchars($row['id_pendaftar']).'
                                 </td>
                                 <th scope="row"
                                     class="flex items-center px-6 py-4 text-[var(--txt-primary)] whitespace-nowrap">
                                     <img class="w-10 h-10 rounded-full"
-                                        src="../assets/img/profile-data-table/profile-1.png" alt="Profile Img Account">
+                                        src="<?php echo htmlspecialchars($foto_profil_path); ?>">
                                     <div class="ps-3">
                                         <div class="text-base font-semibold">
-                                            Adi Juragan Horeg
+                                            '.htmlspecialchars($row['nama_lengkap_ortu']).'
                                         </div>
                                         <div class="font-normal text-[var(--txt-primary)]/80">
-                                            adi.jureg@gmail.com
+                                            '.htmlspecialchars($row['email']).'
                                         </div>
                                     </div>
                                 </th>
                                 <td class="px-6 py-4">
-                                    0857-1124-1158
+                                    '.htmlspecialchars($row['no_hp']).'
                                 </td>
                                 <td class="px-6 py-4">
-                                    12345678910
+                                    '.htmlspecialchars($row['nik']).'
                                 </td>
                                 <td class="px-6 py-4">
-                                    RotiBakarEnak123
+                                    '.htmlspecialchars($row['password']).'
                                 </td>
                                 <td class="px-6 py-4">
                                     <button type="button" data-modal-target="modalUbah" data-modal-toggle="modalUbah"
@@ -291,88 +372,16 @@ include '../koneksi.php';
                                         DELETE
                                     </button>
                                 </td>
-                            </tr>
-                            <tr class="border-t border-[var(--txt-primary)]/10">
-                                <td class="w-4 p-4" align="center">
-                                    2
-                                </td>
-                                <th scope="row"
-                                    class="flex items-center px-6 py-4 text-[var(--txt-primary)] whitespace-nowrap">
-                                    <img class="w-10 h-10 rounded-full"
-                                        src="../assets/img/profile-data-table/profile-2.png" alt="Profile Img Account">
-                                    <div class="ps-3">
-                                        <div class="text-base font-semibold">
-                                            Alex Ray
-                                        </div>
-                                        <div class="font-normal text-[var(--txt-primary)]/80">
-                                            alex.ray@gmail.com
-                                        </div>
-                                    </div>
-                                </th>
-                                <td class="px-6 py-4">
-                                    0857-6554-4476
-                                </td>
-                                <td class="px-6 py-4">
-                                    12345678910
-                                </td>
-                                <td class="px-6 py-4">
-                                    CobasatuLawan1
-                                </td>
-                                <td class="px-6 py-4">
-                                    <button type="button" data-modal-target="modalUbah" data-modal-toggle="modalUbah"
-                                        class="hover:cursor-pointer font-medium text-blue-600 dark:text-blue-500 hover:underline">
-                                        EDIT
-                                    </button>
-                                    <button type="button" data-modal-target="modalHapus" data-modal-toggle="modalHapus"
-                                        class="ms-0 2xl:ms-4 font-medium text-red-600 dark:text-red-500 hover:underline">
-                                        DELETE
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr class="border-t border-[var(--txt-primary)]/10">
-                                <td class="w-4 p-4" align="center">
-                                    3
-                                </td>
-                                <th scope="row"
-                                    class="flex items-center px-6 py-4 text-[var(--txt-primary)] whitespace-nowrap">
-                                    <img class="w-10 h-10 rounded-full"
-                                        src="../assets/img/profile-data-table/profile-3.png" alt="Profile Img Account">
-                                    <div class="ps-3">
-                                        <div class="text-base font-semibold">
-                                            Kate Hunington
-                                        </div>
-                                        <div class="font-normal text-[var(--txt-primary)]/80">
-                                            kate.hunington@gmail.com
-                                        </div>
-                                    </div>
-                                </th>
-                                <td class="px-6 py-4">
-                                    0812-1329-4790
-                                </td>
-                                <td class="px-6 py-4">
-                                    12345678910
-                                </td>
-                                <td class="px-6 py-4">
-                                    134314gfsvsd
-                                </td>
-                                <td class="px-6 py-4">
-                                    <button type="button" data-modal-target="modalUbah" data-modal-toggle="modalUbah"
-                                        class="hover:cursor-pointer font-medium text-blue-600 dark:text-blue-500 hover:underline">
-                                        EDIT
-                                    </button>
-                                    <button type="button" data-modal-target="modalHapus" data-modal-toggle="modalHapus"
-                                        class="ms-0 2xl:ms-4 font-medium text-red-600 dark:text-red-500 hover:underline">
-                                        DELETE
-                                    </button>
-                                </td>
-                            </tr>
+                            </tr>';
+                            } echo'
                         </tbody>
-                    </table>
+                    </table>';
+                    ?>
                 </div>
             </div>
         </div>
-
         <!-- Modal - Tambah Data -->
+
         <div id="modalTambah" data-modal-backdrop="static" tabindex="-1" aria-hidden="true"
             class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-60 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
             <div class="relative p-4 w-full max-w-2xl max-h-full">
@@ -397,7 +406,7 @@ include '../koneksi.php';
                     </div>
                     <!-- Modal body -->
                     <div class="p-4 md:p-5 space-y-4">
-                        <form class="w-full" method="post">
+                        <form class="w-full" method="post" enctype="multipart/form-data">
                             <div class="mb-4">
                                 <label for="fotoProfil" class="block text-lg font-medium text-[var(--txt-primary)]">
                                     Foto Profil
@@ -411,7 +420,7 @@ include '../koneksi.php';
                                     class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     Nama Lengkap:
                                 </label>
-                                <input type="text" id="namaLengkap"
+                                <input type="text" id="namaLengkap" name="namaLengkap"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan Nama Lengkap" required />
                             </div>
@@ -419,7 +428,7 @@ include '../koneksi.php';
                                 <label for="email" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     Email:
                                 </label>
-                                <input type="email" id="email"
+                                <input type="email" id="email" name="email"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan Email" required />
                             </div>
@@ -427,7 +436,7 @@ include '../koneksi.php';
                                 <label for="password" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     Password:
                                 </label>
-                                <input type="password" id="password"
+                                <input type="password" id="password" name="password"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan Password" required />
                             </div>
@@ -435,7 +444,7 @@ include '../koneksi.php';
                                 <label for="noHp" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     No. HP
                                 </label>
-                                <input type="number" id="noHp"
+                                <input type="number" id="noHp" name="no_hp"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan No. Hp" required />
                             </div>
@@ -443,15 +452,15 @@ include '../koneksi.php';
                                 <label for="NIK" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     NIK
                                 </label>
-                                <input type="text"
+                                <input type="text" name="nik"
                                     class="ps-3 mb-5 bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2" placeholder="Masukkan NIK" required>
                             </div>
                             <div class="flex items-center justify-end mt-8">
-                                <button data-modal-hide="modalTambah" type="button"
+                                <button data-modal-hide="modalTambah" type="button" name="batal_tambah"
                                     class="py-2 px-5 text-md hover:cursor-pointer font-medium text-gray-900 focus:outline-none bg-transparent rounded-lg border border-[var(--txt-primary)]/50 hover:bg-[var(--bg-primary2)]/10 focus:z-10 focus:ring-3 focus:ring-[var(--txt-primary)]/20">
                                     Batal
                                 </button>
-                                <button type="submit"
+                                <button type="submit" name="submit_tambah"
                                     class="text-[var(--txt-secondary)] ms-2 bg-[var(--bg-primary2)] hover:bg-[var(--bg-primary2)]/90 focus:ring-3 focus:outline-none focus:ring-[var(--bg-secondary)] font-bold rounded-lg text-md hover:cursor-pointer px-5 py-2 text-center">
                                     Tambah
                                 </button>
@@ -487,7 +496,7 @@ include '../koneksi.php';
                     </div>
                     <!-- Modal body -->
                     <div class="p-4 md:p-5 space-y-3">
-                        <form class="w-full">
+                        <form class="w-full" method="post" enctype="multipart/form-data">
                             <div class="mb-4">
                                 <label for="fotoProfil" class="block text-lg font-medium text-[var(--txt-primary)]">
                                     Foto Profil
@@ -507,7 +516,7 @@ include '../koneksi.php';
                                     class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     Nama Lengkap:
                                 </label>
-                                <input type="text" id="namaLengkap"
+                                <input type="text" id="namaLengkap" name="namaLengkap"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan Nama Lengkap" value="Abdul Ghaniyy Albar" required />
                             </div>
