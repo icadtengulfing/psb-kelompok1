@@ -1,3 +1,70 @@
+<?php
+session_start();
+include '../koneksi.php';
+if (!isset($_SESSION['username'])) {
+    header('location: index.php');
+    exit;
+}
+$order_by = "";
+$search_query = "";
+if (isset($_GET['cari']) && !empty($_GET['cari'])) {
+    $cari = mysqli_real_escape_string($koneksi, $_GET['cari']);
+    $search_query =  " WHERE id_jalur LIKE '%" . $cari . "%' OR jenis_jalur LIKE '%" . $cari . "%'";
+}
+
+if (isset($_GET['sort']) && !empty($_GET['sort'])) {
+    $sort = $_GET['sort'];
+    switch ($sort) {
+        case 'nis_asc':
+            $order_by = "ORDER BY nis ASC";
+            break;
+        case 'nis_desc':
+            $order_by = " ORDER BY nis DESC";
+            break;
+        case 'nama_asc':
+            $order_by = " ORDER BY nama_lengkap_siswa ASC";
+            break;
+        case 'nama_desc':
+            $order_by = " ORDER BY nama_lengkap_siswa DESC";
+            break;
+        default:
+            // Tidak ada pengurutan atau nilai tidak valid
+            $order_by = "";
+            break;
+    }
+}
+$query = "SELECT * FROM jalur_pendaftaran";
+if (!empty($search_query)) {
+    $query .= " " . $search_query;
+}
+if (!empty($order_by)) {
+    $query .= " " . $order_by;
+}
+$result = mysqli_query($koneksi, $query);
+
+if (!$result) {
+    die('SQL Error: ' . mysqli_error($koneksi));
+}
+// delete
+if ( isset($_GET['edit']) )
+{
+    $cek = mysqli_query($koneksi, "SELECT * FROM siswa WHERE id_jalur='$_GET[edit]'");
+    if (mysqli_num_rows($cek) > 0) {
+        echo "<script>
+        alert('Data masih terhubung dengan siswa, silahkan hapus data siswa terlebih dahulu!');
+        window.location.href = 'daftar-kuota.php';
+        </script>";
+    } else {
+        // delete data
+        $delete_query = mysqli_query($koneksi, "DELETE FROM jalur_pendaftaran WHERE id_jalur='$_GET[edit]'");
+            echo "<script>
+            alert('Data Berhasil di Hapus!');
+            window.location.href = 'daftar-kuota.php';
+            </script>
+            ";
+    }
+}
+?>
 <!doctype html>
 <html>
 
@@ -240,27 +307,31 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="border-t border-[var(--txt-primary)]/10">
+                        <?php
+                            while ($row = mysqli_fetch_assoc($result)) {
+                            echo'<tr class="border-t border-[var(--txt-primary)]/10">
                                 <td class="w-4 p-4" align="center">
-                                    1
+                                    '.htmlspecialchars($row['id_jalur']).'
                                 </td>
                                 <td class="px-6 py-4">
-                                    Reguler
+                                     '.htmlspecialchars($row['jenis_jalur']).'
                                 </td>
                                 <td class="px-6 py-4">
-                                    500
+                                     '.htmlspecialchars($row['kuota']).'
                                 </td>
                                 <td class="px-6 py-4">
-                                    <button type="button" data-modal-target="modalUbah" data-modal-toggle="modalUbah"
+                                    <a type="button" href="edit_jalur.php?edit='.htmlspecialchars($row['id_jalur']).'"
                                         class="hover:cursor-pointer font-medium text-blue-600 dark:text-blue-500 hover:underline">
                                         EDIT
-                                    </button>
-                                    <button type="button" data-modal-target="modalHapus" data-modal-toggle="modalHapus"
+                                    </a>
+                                    <a type="button" href="?edit='.htmlspecialchars($row['id_jalur']).'" onclick="return confirm("Yakin ingin menghapus data ini?");"
                                         class="ms-0 2xl:ms-3 font-medium text-red-600 dark:text-red-500 hover:underline">
                                         DELETE
-                                    </button>
+                                    </a>
                                 </td>
-                            </tr>
+                            </tr>';
+                            }
+                            ?>
                         </tbody>
                     </table>
                 </div>
@@ -326,110 +397,6 @@
             </div>
         </div>
 
-        <!-- Modal - Ubah Data -->
-        <div id="modalUbah" data-modal-backdrop="static" tabindex="-1" aria-hidden="true"
-            class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-60 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-            <div class="relative p-4 w-full max-w-2xl max-h-full">
-                <!-- Modal content -->
-                <div class="relative bg-[var(--bg-primary)] rounded-lg shadow-sm">
-                    <!-- Modal header -->
-                    <div
-                        class="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-[var(--txt-primary)]/50">
-                        <h3 class="text-xl font-semibold text-[var(--txt-primary)]">
-                            Ubah Data Kuota Jalur
-                        </h3>
-                        <button type="button"
-                            class="text-[var(--txt-primary)]/50 bg-transparent hover:bg-[var(--bg-primary2)]/20 hover:text-[var(--txt-primary)] rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center hover:cursor-pointer"
-                            data-modal-hide="modalUbah">
-                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 14 14">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                    stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                            </svg>
-                            <span class="sr-only">Close modal</span>
-                        </button>
-                    </div>
-                    <!-- Modal body -->
-                    <div class="p-4 md:p-5 space-y-3">
-                        <form class="w-full">
-                            <div class="mb-4">
-                                <label for="id_jalur" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
-                                    id_jalur
-                                </label>
-                                <input type="number" id="id_jalur"
-                                    class="bg-[var(--bg-primary2)]/20 hover:bg-[var(--bg-primary2)]/30 border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3 cursor-not-allowed"
-                                    placeholder="Id Jalur" required disabled value="1" />
-                            </div>
-                            <div class="mb-4">
-                                <label for="namaJalur" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
-                                    Nama Jalur:
-                                </label>
-                                <input type="text" id="namaJalur"
-                                    class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
-                                    placeholder="Masukkan Nama Jalur" required value="Reguler" />
-                            </div>
-                            <div class="mb-4">
-                                <label for="kuotaJalur"
-                                    class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
-                                    Kuota Jalur:
-                                </label>
-                                <input type="number" id="kuotaJalur"
-                                    class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
-                                    placeholder="Masukkan Kuota Jalur" required value="500" />
-                            </div>
-                            <div class="flex items-center justify-end mt-8">
-                                <button data-modal-hide="modalUbah" type="button"
-                                    class="py-2 px-5 text-md hover:cursor-pointer font-medium text-gray-900 focus:outline-none bg-transparent rounded-lg border border-[var(--txt-primary)]/50 hover:bg-[var(--bg-primary2)]/10 focus:z-10 focus:ring-3 focus:ring-[var(--txt-primary)]/20">
-                                    Batal
-                                </button>
-                                <button type="submit"
-                                    class="text-[var(--txt-secondary)] ms-2 bg-[var(--bg-primary2)] hover:bg-[var(--bg-primary2)]/90 focus:ring-3 focus:outline-none focus:ring-[var(--bg-secondary)] font-bold rounded-lg text-md hover:cursor-pointer px-5 py-2 text-center">
-                                    Ubah
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal - Hapus Data -->
-        <div id="modalHapus" tabindex="-1"
-            class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-            <div class="relative p-4 w-full max-w-md max-h-full">
-                <div class="relative bg-[var(--bg-primary2)]/60 backdrop-blur-md rounded-lg shadow-sm">
-                    <button type="button"
-                        class="absolute top-3 end-2.5 text-[var(--txt-secondary)]/60 bg-transparent hover:bg-[var(--bg-primary)]/10 hover:cursor-pointer hover:text-[var(--txt-secondary)] rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
-                        data-modal-hide="modalHapus">
-                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 14 14">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                        </svg>
-                        <span class="sr-only">Close modal</span>
-                    </button>
-                    <div class="p-4 md:p-5 text-center">
-                        <svg class="mx-auto mb-4 text-[var(--txt-secondary)] w-12 h-12" aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                        </svg>
-                        <h3 class="mb-5 text-lg font-normal text-[var(--txt-secondary)]/60">
-                            Yakin ingin menghapus data ini?
-                        </h3>
-
-                        <button data-modal-hide="modalHapus" type="button"
-                            class="py-2 px-5 text-md font-medium text-[var(--txt-secondary)]/80 hover:cursor-pointer focus:outline-none bg-transparent rounded-lg border border-[var(--txt-secondary)]/30 hover:bg-[var(--bg-primary)]/10 hover:text-[var(--txt-secondary)] focus:z-10 focus:ring-3 focus:ring-[var(--txt-secondary)]">
-                            Batal
-                        </button>
-                        <button data-modal-hide="modalHapus" type="button"
-                            class="ms-1 text-[var(--txt-secondary)] bg-red-600 hover:bg-red-800 focus:ring-3 focus:outline-none focus:ring-red-300 hover:cursor-pointer font-medium rounded-lg text-md inline-flex items-center px-5 py-2 text-center">
-                            Hapus
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
     </section>
 

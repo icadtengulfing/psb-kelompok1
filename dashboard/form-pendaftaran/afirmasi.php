@@ -34,14 +34,14 @@ if (mysqli_num_rows($result_pendaftar) > 0) {
     die("Error: Data pendaftar tidak ditemukan!");
 }
 
-$cek_jalur = mysqli_query($koneksi, "SELECT id_jalur FROM jalur_pendaftaran WHERE jenis_jalur = 'Reguler' LIMIT 1");
+$cek_jalur = mysqli_query($koneksi, "SELECT id_jalur FROM jalur_pendaftaran WHERE jenis_jalur = 'Afirmasi' LIMIT 1");
 
 if (mysqli_num_rows($cek_jalur) > 0) {
     $row = mysqli_fetch_assoc($cek_jalur);
     $id_jalur = $row['id_jalur'];
 } else {
     // Jika belum ada, insert dulu
-    mysqli_query($koneksi, "INSERT INTO jalur_pendaftaran (jenis_jalur) VALUES ('Reguler')");
+    mysqli_query($koneksi, "INSERT INTO jalur_pendaftaran (jenis_jalur) VALUES ('Afirmasi')");
     $id_jalur = mysqli_insert_id($koneksi);
 }
 
@@ -75,7 +75,7 @@ if ($result) {
         'ijazahSmp' => 'Ijazah SMP', 
         'SKL' => 'Surat Keterangan Lulus',
         'akteLahir' => 'Akte Lahir',
-        'pasFoto' => 'Pas Foto',
+        'pasFoto' => 'Pas Foto 3x4',
         'SKCK' => 'SKCK',
         'KPIP' => 'KPIP',
         'SKTM' => 'SKTM',

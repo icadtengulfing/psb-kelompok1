@@ -1,15 +1,47 @@
 <?php
 session_start();
-include '../koneksi.php';  
-if(!isset($_SESSION['username'])) {
+include '../koneksi.php';
+if (!isset($_SESSION['username'])) {
     header('location: index.php');
     exit;
+}
+
+if (isset($_POST['submit_edit'])) {
+    $id_pendaftar = mysqli_real_escape_string($koneksi, $_POST['id_pendaftar']);
+    $nama_lengkap_ortu = mysqli_real_escape_string($koneksi, $_POST['namaLengkapEdit']);
+    $email = mysqli_real_escape_string($koneksi, $_POST['emailEdit']);
+    $password = mysqli_real_escape_string($koneksi, $_POST['passwordEdit']);
+    $no_hp = mysqli_real_escape_string($koneksi, $_POST['no_hpEdit']);
+
+    $hash_password = password_hash($password, PASSWORD_DEFAULT);
+
+    $foto_profil_update = "";
+    if (isset($_FILES['fotoProfil']) && $_FILES['fotoProfil']['error'] == 0) {
+        $upload_dir = "../dashboard/uploads/";
+        $file_name = time() . "_" . basename($_FILES['fotoProfil']['name']);
+        $target_file = $upload_dir . $file_name;
+
+        $allowed_types = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (in_array($_FILES['fotoProfil']['type'], $allowed_types)) {
+            if (move_uploaded_file($_FILES['fotoProfil']['tmp_name'], $target_file)) {
+
+                $query_foto_lama = "SELECT foto_profil FROM pendaftar WHERE id_pendaftar = '$id_pendaftar'";
+                $result_lama = mysqli_query($koneksi, $query_foto_lama);
+                $data_lama = mysqli_fetch_assoc($result_lama);
+
+                if (!empty($data_lama['foto_profil']) && file_exists($data_lama['foto_profil'])) {
+                    unlink($data_lama['foto_profil']);
+                }
+            }
+        }
+    }
+    $query_edit = "UPDATE pendaftar SET nama_lengkap_ortu = '$nama_lengkap_ortu', email = '$email', password = '$hash_password', no_hp = '$no_hp', foto_profil = '$foto_profil_update' WHERE id_pendaftar = '$id_pendaftar'";
 }
 
 $order_by = "";
 $search_query = "";
 if (isset($_GET['cari']) && !empty($_GET['cari'])) {
-    $cari = mysqli_real_escape_string($koneksi,$_GET['cari']);
+    $cari = mysqli_real_escape_string($koneksi, $_GET['cari']);
     $search_query =  " WHERE nama_lengkap_ortu LIKE '%" . $cari . "%' OR email LIKE '%" . $cari . "%'";
 }
 
@@ -28,60 +60,64 @@ if (isset($_GET['sort']) && !empty($_GET['sort'])) {
         case 'id_desc':
             $order_by = " ORDER BY id_pendaftar DESC";
             break;
-            default:
-        // Tidak ada pengurutan atau nilai tidak valid
-        $order_by = "";
-        break;
-        }
+        default:
+            // Tidak ada pengurutan atau nilai tidak valid
+            $order_by = "";
+            break;
     }
-    $query = "SELECT * FROM pendaftar";
-        if (!empty($search_query)) {
-            $query .= " " . $search_query;
-        }
-        if (!empty($order_by)) {
-            $query .= " " . $order_by;
-        }
-    $result = mysqli_query($koneksi, $query);
-    $user_data = mysqli_fetch_assoc($result);
+}
+$query = "SELECT * FROM pendaftar";
+if (!empty($search_query)) {
+    $query .= " " . $search_query;
+}
+if (!empty($order_by)) {
+    $query .= " " . $order_by;
+}
+$result = mysqli_query($koneksi, $query);
 
-    $foto_profil_path = (!empty($user_data['foto_profil']) && $user_data['foto_profil'] != 'default-profile.jpg') 
-                   ? "../dashboard/uploads/" . $user_data['foto_profil'] 
-                   : "..//assets/img/default-profile.jpg";
+if (!$result) {
+    die('SQL Error: ' . mysqli_error($koneksi));
+}
 
-    if (!$query) {
-        die ('SQL Error: ' . mysqli_error($koneksi));
-    }
-    
-    if (isset($_POST['submit_tambah'])) {
-        $nama_lengkap_ortu = mysqli_real_escape_string($koneksi, $_POST['namaLengkap']);
-        $nik = mysqli_real_escape_string($koneksi, $_POST['nik']);
-        $email = mysqli_real_escape_string($koneksi, $_POST['email']);
-        $password = mysqli_real_escape_string($koneksi, $_POST['password']);
-        $no_hp = mysqli_real_escape_string($koneksi, $_POST['no_hp']);
+if (isset($_POST['submit_tambah'])) {
+    $nama_lengkap_ortu = mysqli_real_escape_string($koneksi, $_POST['namaLengkap']);
+    $nik = mysqli_real_escape_string($koneksi, $_POST['nik']);
+    $email = mysqli_real_escape_string($koneksi, $_POST['email']);
+    $password = mysqli_real_escape_string($koneksi, $_POST['password']);
+    $no_hp = mysqli_real_escape_string($koneksi, $_POST['no_hp']);
 
-        $hash_password = password_hash($password, PASSWORD_DEFAULT);
+    $hash_password = password_hash($password, PASSWORD_DEFAULT);
 
-        $foto_profil = 'default-profile.jpg';
-        if(isset($_FILES['fotoProfil']) && $_FILES['fotoProfil']['error'] == 0) {
-            $upload_dir = "../dashboard/uploads/";
-            $file_name = time() . "_" . basename($_FILES['fotoProfil']['name']);
-            $target_file = $upload_dir . $file_name;
+    $foto_profil = 'default-profile.jpg';
+    if (isset($_FILES['fotoProfil']) && $_FILES['fotoProfil']['error'] == 0) {
+        $upload_dir = "../dashboard/uploads/";
+        $file_name = time() . "_" . basename($_FILES['fotoProfil']['name']);
+        $target_file = $upload_dir . $file_name;
 
-            $allowed_types = ['image/jpeg', 'image/jpg', 'image/png'];
-            if (in_array($_FILES['fotoProfil']['type'], $allowed_types)) {
-                if (move_uploaded_file($_FILES['fotoProfil']['tmp_name'], $target_file)) {
-                    $foto_profil = $file_name;
-                }
+        $allowed_types = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (in_array($_FILES['fotoProfil']['type'], $allowed_types)) {
+            if (move_uploaded_file($_FILES['fotoProfil']['tmp_name'], $target_file)) {
+                $foto_profil = $file_name;
             }
         }
-        $query_tambah = "INSERT INTO pendaftar (foto_profil, nama_lengkap_ortu, email, password, no_hp, nik) VALUES ('$foto_profil', '$nama_lengkap_ortu', '$email', '$hash_password', '$no_hp', '$nik')";
-        if (mysqli_query($koneksi, $query_tambah)) {
-            echo "<script>alert('Data Berhasil Dikirm!'); window.location.reload();</script>";
-            header('location: daftar-akun.php');
-        } else {
-            echo "<script>alert('Error: " . mysqli_error($koneksi) . "');</script>";
-        }
     }
+    $query_tambah = "INSERT INTO pendaftar (foto_profil, nama_lengkap_ortu, email, password, no_hp, nik) VALUES ('$foto_profil', '$nama_lengkap_ortu', '$email', '$hash_password', '$no_hp', '$nik')";
+    if (mysqli_query($koneksi, $query_tambah)) {
+        echo "<script>alert('Data Berhasil Dikirm!'); window.location.reload();</script>";
+        header('location: daftar-akun.php');
+    } else {
+        echo "<script>alert('Error: " . mysqli_error($koneksi) . "');</script>";
+    }
+}
+if ( isset($_GET['edit']) )
+{
+  mysqli_query( $koneksi, "DELETE FROM pendaftar WHERE id_pendaftar ='$_GET[edit]'" );
+
+  echo "<script>
+  alert('Data Berhasil di Hapus!');
+  window.location.href = 'daftar-akun.php';
+  </script>";
+}
 ?>
 <!doctype html>
 <html>
@@ -287,20 +323,20 @@ if (isset($_GET['sort']) && !empty($_GET['sort'])) {
                         </div>
                     </div>
                     <form action="" method="GET">
-                    <label for="table-search" class="sr-only">Search</label>
-                    <div class="relative">
-                        <div
-                            class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
-                            <svg class="w-4 h-4 text-[var(--txt-primary)]" aria-hidden="true"
-                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                    stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                            </svg>
+                        <label for="table-search" class="sr-only">Search</label>
+                        <div class="relative">
+                            <div
+                                class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+                                <svg class="w-4 h-4 text-[var(--txt-primary)]" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                                </svg>
+                            </div>
+                            <input type="text" id="table-search-users" name="cari"
+                                class="block p-2 ps-10 text-md text-[var(--txt-primary)] border border-[var(--txt-primary)]/30 bg-[var(--bg-primary3)] rounded-lg w-full lg:w-100 focus:ring-0"
+                                placeholder="Cari Data Akun">
                         </div>
-                        <input type="text" id="table-search-users" name="cari"
-                            class="block p-2 ps-10 text-md text-[var(--txt-primary)] border border-[var(--txt-primary)]/30 bg-[var(--bg-primary3)] rounded-lg w-full lg:w-100 focus:ring-0"
-                            placeholder="Cari Data Akun">
-                    </div>
                     </form>
                     <button type="button" data-modal-target="modalTambah" data-modal-toggle="modalTambah"
                         class="w-full sm:w-auto focus:outline-none text-[var(--txt-secondary)] bg-[var(--bg-primary2)] hover:bg-[var(--bg-primary2)]/90 hover:cursor-pointer transition duration-500 shadow-md font-medium rounded-lg text-sm px-5 py-2.5">Tambah
@@ -309,7 +345,7 @@ if (isset($_GET['sort']) && !empty($_GET['sort'])) {
 
                 <div
                     class="overflow-x-auto sm:rounded-lg border border-[var(--txt-primary)]/30 bg-[var(--bg-primary3)] shadow-md mt-2">
-                   <?php echo
+                    <?php echo
                     '<table class="w-full text-md text-left rtl:text-right text-[var(--txt-primary)] ">
                         <thead class="text-lg text-[var(--txt-primary)] uppercase bg-[var(--bg-primary2)]/10">
                             <tr>
@@ -334,46 +370,50 @@ if (isset($_GET['sort']) && !empty($_GET['sort'])) {
                             </tr>
                         </thead>
                         <tbody>';
-                            while ($row = mysqli_fetch_assoc($result))
-                            {
-                            echo '<tr class="border-t border-[var(--txt-primary)]/10">
+                    while ($row = mysqli_fetch_assoc($result)) {
+                        $foto_profil_path = (!empty($row['foto_profil']) && $row['foto_profil'] != 'default-profile.jpg')
+                            ? "../dashboard/uploads/" . htmlspecialchars($row['foto_profil'])
+                            : "../assets/img/default-profile.jpg";
+
+                        echo '<tr class="border-t border-[var(--txt-primary)]/10">
                                 <td class="w-4 p-4" align="center">
-                                    '.htmlspecialchars($row['id_pendaftar']).'
+                                    ' . htmlspecialchars($row['id_pendaftar']) . '
                                 </td>
                                 <th scope="row"
                                     class="flex items-center px-6 py-4 text-[var(--txt-primary)] whitespace-nowrap">
                                     <img class="w-10 h-10 rounded-full"
-                                        src="<?php echo htmlspecialchars($foto_profil_path); ?>">
+                                        src="' . $foto_profil_path . '">
                                     <div class="ps-3">
                                         <div class="text-base font-semibold">
-                                            '.htmlspecialchars($row['nama_lengkap_ortu']).'
+                                            ' . htmlspecialchars($row['nama_lengkap_ortu']) . '
                                         </div>
                                         <div class="font-normal text-[var(--txt-primary)]/80">
-                                            '.htmlspecialchars($row['email']).'
+                                            ' . htmlspecialchars($row['email']) . '
                                         </div>
                                     </div>
                                 </th>
                                 <td class="px-6 py-4">
-                                    '.htmlspecialchars($row['no_hp']).'
+                                    ' . htmlspecialchars($row['no_hp']) . '
                                 </td>
                                 <td class="px-6 py-4">
-                                    '.htmlspecialchars($row['nik']).'
+                                    ' . htmlspecialchars($row['nik']) . '
                                 </td>
                                 <td class="px-6 py-4">
-                                    '.htmlspecialchars($row['password']).'
+                                    ' . htmlspecialchars($row['password']) . '
                                 </td>
                                 <td class="px-6 py-4">
-                                    <button type="button" data-modal-target="modalUbah" data-modal-toggle="modalUbah"
+                                    <a type="button" href="edit_akun.php?edit='.htmlspecialchars($row['id_pendaftar']).'" 
                                         class="hover:cursor-pointer font-medium text-blue-600 dark:text-blue-500 hover:underline">
                                         EDIT
-                                    </button>
-                                    <button type="button" data-modal-target="modalHapus" data-modal-toggle="modalHapus"
+                                    </a>
+                                    <a type="button" href="?edit='.htmlspecialchars($row['id_pendaftar']).'" onclick="return confirm("Yakin ingin menghapus data ini?");"
                                         class="ms-0 2xl:ms-4 font-medium text-red-600 dark:text-red-500 hover:underline">
                                         DELETE
-                                    </button>
+                                    </a>
                                 </td>
                             </tr>';
-                            } echo'
+                    }
+                    echo '
                         </tbody>
                     </table>';
                     ?>
@@ -411,8 +451,7 @@ if (isset($_GET['sort']) && !empty($_GET['sort'])) {
                                 <label for="fotoProfil" class="block text-lg font-medium text-[var(--txt-primary)]">
                                     Foto Profil
                                 </label>
-
-                                <input type="file" id="fotoProfil" name="fotoProfil"
+                                <input type="file" id="fotoProfilEdit" name="fotoProfilEdit"
                                     class="mt-2 block w-full text-sm text-[var(--txt-primary)] border border-[var(--txt-primary)]/30 rounded-lg cursor-pointer bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)]">
                             </div>
                             <div class="mb-4">
@@ -420,7 +459,7 @@ if (isset($_GET['sort']) && !empty($_GET['sort'])) {
                                     class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     Nama Lengkap:
                                 </label>
-                                <input type="text" id="namaLengkap" name="namaLengkap"
+                                <input type="text" id="namaLengkap" name="namaLengkapEdit"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan Nama Lengkap" required />
                             </div>
@@ -428,7 +467,7 @@ if (isset($_GET['sort']) && !empty($_GET['sort'])) {
                                 <label for="email" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     Email:
                                 </label>
-                                <input type="email" id="email" name="email"
+                                <input type="email" id="email" name="emailEdit"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan Email" required />
                             </div>
@@ -436,7 +475,7 @@ if (isset($_GET['sort']) && !empty($_GET['sort'])) {
                                 <label for="password" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     Password:
                                 </label>
-                                <input type="password" id="password" name="password"
+                                <input type="password" id="password" name="passwordEdit"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan Password" required />
                             </div>
@@ -444,7 +483,7 @@ if (isset($_GET['sort']) && !empty($_GET['sort'])) {
                                 <label for="noHp" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     No. HP
                                 </label>
-                                <input type="number" id="noHp" name="no_hp"
+                                <input type="number" id="noHp" name="no_hpEdit"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan No. Hp" required />
                             </div>
@@ -471,145 +510,7 @@ if (isset($_GET['sort']) && !empty($_GET['sort'])) {
             </div>
         </div>
 
-        <!-- Modal - Ubah Data -->
-        <div id="modalUbah" data-modal-backdrop="static" tabindex="-1" aria-hidden="true"
-            class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-60 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-            <div class="relative p-4 w-full max-w-2xl max-h-full">
-                <!-- Modal content -->
-                <div class="relative bg-[var(--bg-primary)] rounded-lg shadow-sm">
-                    <!-- Modal header -->
-                    <div
-                        class="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-[var(--txt-primary)]/50">
-                        <h3 class="text-xl font-semibold text-[var(--txt-primary)]">
-                            Ubah Akun
-                        </h3>
-                        <button type="button"
-                            class="text-[var(--txt-primary)]/50 bg-transparent hover:bg-[var(--bg-primary2)]/20 hover:text-[var(--txt-primary)] rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center hover:cursor-pointer"
-                            data-modal-hide="modalUbah">
-                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 14 14">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                    stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                            </svg>
-                            <span class="sr-only">Close modal</span>
-                        </button>
-                    </div>
-                    <!-- Modal body -->
-                    <div class="p-4 md:p-5 space-y-3">
-                        <form class="w-full" method="post" enctype="multipart/form-data">
-                            <div class="mb-4">
-                                <label for="fotoProfil" class="block text-lg font-medium text-[var(--txt-primary)]">
-                                    Foto Profil
-                                </label>
-
-                                <input type="file" id="fotoProfil" name="fotoProfil"
-                                    class="mt-2 block w-full text-sm text-[var(--txt-primary)] border border-[var(--txt-primary)]/30 rounded-lg cursor-pointer bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)]">
-
-                                <small class="block text-gray-500 mt-1">
-                                    Foto Profil saat ini:
-                                </small>
-                                <img src="../assets/img/default-profile.jpg" alt="Preview cover"
-                                    class="mt-3 w-40 rounded-full border border-[var(--txt-primary)]/30 shadow-sm">
-                            </div>
-                            <div class="mb-4">
-                                <label for="namaLengkap"
-                                    class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
-                                    Nama Lengkap:
-                                </label>
-                                <input type="text" id="namaLengkap" name="namaLengkap"
-                                    class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
-                                    placeholder="Masukkan Nama Lengkap" value="Abdul Ghaniyy Albar" required />
-                            </div>
-                            <div class="mb-4">
-                                <label for="email" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
-                                    Email:
-                                </label>
-                                <input type="email" id="email"
-                                    class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
-                                    placeholder="Masukkan Email" value="Abdul Ghaniyy Albar" required />
-                            </div>
-                            <div class="mb-4">
-                                <label for="password" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
-                                    Password:
-                                </label>
-                                <input type="password" id="password"
-                                    class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
-                                    placeholder="Masukkan Password" value="albarsanghorek" required />
-                            </div>
-                            <div class="mb-4">
-                                <label for="noHp" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
-                                    No. HP
-                                </label>
-                                <input type="number" id="noHp"
-                                    class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
-                                    placeholder="Masukkan No. Hp" value="08572342349" required />
-                            </div>
-                            <div class="mb-4">
-                                <label for="NIK" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
-                                    NIK
-                                </label>
-                                <input type="text" id="disabled-input" aria-label="disabled input"
-                                    class="ps-3 mb-5 bg-[var(--bg-primary2)]/20 hover:bg-[var(--bg-primary2)]/30 border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 cursor-not-allowed"
-                                    value="2394823942394" disabled>
-                            </div>
-                            <div class="flex items-center justify-end mt-8">
-                                <button data-modal-hide="modalUbah" type="button"
-                                    class="py-2 px-5 text-md hover:cursor-pointer font-medium text-gray-900 focus:outline-none bg-transparent rounded-lg border border-[var(--txt-primary)]/50 hover:bg-[var(--bg-primary2)]/10 focus:z-10 focus:ring-3 focus:ring-[var(--txt-primary)]/20">
-                                    Batal
-                                </button>
-                                <button type="submit"
-                                    class="text-[var(--txt-secondary)] ms-2 bg-[var(--bg-primary2)] hover:bg-[var(--bg-primary2)]/90 focus:ring-3 focus:outline-none focus:ring-[var(--bg-secondary)] font-bold rounded-lg text-md hover:cursor-pointer px-5 py-2 text-center">
-                                    Ubah
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal - Hapus Data -->
-        <div id="modalHapus" tabindex="-1"
-            class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-            <div class="relative p-4 w-full max-w-md max-h-full">
-                <div class="relative bg-[var(--bg-primary2)]/60 backdrop-blur-md rounded-lg shadow-sm">
-                    <button type="button"
-                        class="absolute top-3 end-2.5 text-[var(--txt-secondary)]/60 bg-transparent hover:bg-[var(--bg-primary)]/10 hover:cursor-pointer hover:text-[var(--txt-secondary)] rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
-                        data-modal-hide="modalHapus">
-                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 14 14">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                        </svg>
-                        <span class="sr-only">Close modal</span>
-                    </button>
-                    <div class="p-4 md:p-5 text-center">
-                        <svg class="mx-auto mb-4 text-[var(--txt-secondary)] w-12 h-12" aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                        </svg>
-                        <h3 class="mb-5 text-lg font-normal text-[var(--txt-secondary)]/60">
-                            Yakin ingin menghapus data ini?
-                        </h3>
-
-                        <button data-modal-hide="modalHapus" type="button"
-                            class="py-2 px-5 text-md font-medium text-[var(--txt-secondary)]/80 hover:cursor-pointer focus:outline-none bg-transparent rounded-lg border border-[var(--txt-secondary)]/30 hover:bg-[var(--bg-primary)]/10 hover:text-[var(--txt-secondary)] focus:z-10 focus:ring-3 focus:ring-[var(--txt-secondary)]">
-                            Batal
-                        </button>
-                        <button data-modal-hide="modalHapus" type="button"
-                            class="ms-1 text-[var(--txt-secondary)] bg-red-600 hover:bg-red-800 focus:ring-3 focus:outline-none focus:ring-red-300 hover:cursor-pointer font-medium rounded-lg text-md inline-flex items-center px-5 py-2 text-center">
-                            Hapus
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </section>
-
-
-
     <!-- Tutup Main Content -->
 
     <!-- Flowbite Script -->

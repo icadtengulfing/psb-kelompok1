@@ -1,5 +1,86 @@
-<!doctype html>
-<html>
+<?php
+session_start();
+include '../koneksi.php';
+if (!isset($_SESSION['username'])) {
+    header('location: index.php');
+    exit;
+}
+$order_by = "";
+$search_query = "";
+if (isset($_GET['cari']) && !empty($_GET['cari'])) {
+    $cari = mysqli_real_escape_string($koneksi, $_GET['cari']);
+    $search_query =  " WHERE nis LIKE '%" . $cari . "%' OR nama_lengkap_siswa LIKE '%" . $cari . "%'";
+}
+
+if (isset($_GET['sort']) && !empty($_GET['sort'])) {
+    $sort = $_GET['sort'];
+    switch ($sort) {
+        case 'nis_asc':
+            $order_by = "ORDER BY nis ASC";
+            break;
+        case 'nis_desc':
+            $order_by = " ORDER BY nis DESC";
+            break;
+        case 'nama_asc':
+            $order_by = " ORDER BY nama_lengkap_siswa ASC";
+            break;
+        case 'nama_desc':
+            $order_by = " ORDER BY nama_lengkap_siswa DESC";
+            break;
+        default:
+            // Tidak ada pengurutan atau nilai tidak valid
+            $order_by = "";
+            break;
+    }
+}
+$query = "SELECT * FROM siswa";
+if (!empty($search_query)) {
+    $query .= " " . $search_query;
+}
+if (!empty($order_by)) {
+    $query .= " " . $order_by;
+}
+$result = mysqli_query($koneksi, $query);
+
+if (!$result) {
+    die('SQL Error: ' . mysqli_error($koneksi));
+}
+if (isset($_POST['submit_tambah'])) {
+$nis = mysqli_real_escape_string($koneksi, $_POST['nis']);
+$nama_lengkap_siswa = mysqli_real_escape_string($koneksi, $_POST['nama_lengkap_siswa']);
+$nik_siswa = mysqli_real_escape_string($koneksi, $_POST['nik_siswa']);
+$nisn = mysqli_real_escape_string($koneksi, $_POST['nisn']);
+$asal_sekolah = mysqli_real_escape_string($koneksi, $_POST['asal_sekolah']);
+$alamat = mysqli_real_escape_string($koneksi, $_POST['alamat']);
+$tempat_lahir = mysqli_real_escape_string($koneksi, $_POST['tempat_lahir']);
+
+
+$tanggal_lahir_mysql = NULL; 
+
+if (!empty($tanggal_lahir)) {
+    $timestamp = strtotime($tanggal_lahir);
+    
+    if ($timestamp !== false) {
+        $tanggal_lahir_mysql = date('Y-m-d', $timestamp);
+    }
+} 
+
+$query_siswa = "INSERT INTO siswa (nis, nama_lengkap_siswa, nik_siswa, nisn, asal_sekolah, alamat, tempat_lahir) 
+                VALUES ('$nis', '$nama_lengkap_siswa', '$nik_siswa', '$nisn', '$asal_sekolah', '$alamat', '$tempat_lahir')";
+$result_siswa = mysqli_query($koneksi, $query_siswa);
+}
+if ( isset($_GET['edit']) )
+{
+  mysqli_query( $koneksi, "DELETE FROM siswa WHERE nis ='$_GET[edit]'" );
+
+  echo "<script>
+  alert('Data Berhasil di Hapus!');
+  window.location.href = 'daftar-siswa.php';
+  </script>";
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -169,38 +250,29 @@
                         <div id="dropdownAction" class="z-10 hidden bg-[var(--bg-primary2)] rounded-lg shadow-sm w-42">
                             <ul class="py-1 text-sm text-[var(--txt-secondary)]" aria-labelledby="dropdownActionButton">
                                 <li>
-                                    <a href="#" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
+                                    <a href="?sort=nis_asc" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
+                                        Awal ke akhir (NIS)
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="?sort=nis_desc" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
+                                        Akhir ke awal (NIS)
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="?sort=nama_asc" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
                                         Awal ke akhir (A - Z)
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="#" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
-                                        Akhir ke awal (Z - A)
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
-                                        Awal ke akhir (ID)
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
-                                        Akhir ke awal (ID)
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
-                                        Tanggal terlama
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
-                                        Tanggal terbaru
+                                    <a href="?sort=nama_desc" class="block px-4 py-2 hover:bg-[var(--bg-primary3)]/10">
+                                        Akhir ke awal (A - Z)
                                     </a>
                                 </li>
                             </ul>
                         </div>
                     </div>
+                    <form action="" method="GET">
                     <label for="table-search" class="sr-only">Search</label>
                     <div class="relative">
                         <div
@@ -211,10 +283,11 @@
                                     stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
                             </svg>
                         </div>
-                        <input type="text" id="table-search-users"
+                        <input type="text" id="table-search-users" name="cari"
                             class="block p-2 ps-10 text-md text-[var(--txt-primary)] border border-[var(--txt-primary)]/30 bg-[var(--bg-primary3)] rounded-lg w-full lg:w-100 focus:ring-0"
-                            placeholder="Cari Data Akun">
+                            placeholder="Cari Data Siswa">
                     </div>
+                    </form>
                     <button type="button" data-modal-target="modalTambah" data-modal-toggle="modalTambah"
                         class="w-full sm:w-auto focus:outline-none text-[var(--txt-secondary)] bg-[var(--bg-primary2)] hover:bg-[var(--bg-primary2)]/90 hover:cursor-pointer transition duration-500 shadow-md font-medium rounded-lg text-sm px-5 py-2.5">Tambah
                         +</button>
@@ -258,45 +331,49 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="border-t border-[var(--txt-primary)]/10">
+                            <?php
+                            while ($row = mysqli_fetch_assoc($result)) {
+                                echo ' <tr class="border-t border-[var(--txt-primary)]/10">
                                 <td class="w-4 p-4" align="center">
-                                    12345678
+                                    ' . htmlspecialchars($row['nis']) . '
                                 </td>
                                 <td class="px-6 py-4">
-                                    1
+                                    ' . htmlspecialchars($row['id_pendaftar']) . '
                                 </td>
                                 <td class="px-6 py-4">
-                                    1
+                                    ' . htmlspecialchars($row['id_jalur']) . '
                                 </td>
                                 <td class="px-6 py-4">
-                                    Fadlan Mati Lampu
+                                    ' . htmlspecialchars($row['nama_lengkap_siswa']) . '
                                 </td>
                                 <td class="px-6 py-4">
-                                    12345678910
+                                    ' . htmlspecialchars($row['nisn']) . '
                                 </td>
                                 <td class="px-6 py-4">
-                                    12345678910
+                                    ' . htmlspecialchars($row['nik_siswa']) . '
                                 </td>
                                 <td class="px-6 py-4">
-                                    SMP Islam Al Rokes Parigi
+                                    ' . htmlspecialchars($row['asal_sekolah']) . '
                                 </td>
                                 <td class="px-6 py-4">
-                                    Bundaran Pamulang , Jl. Rumah, No. 51, Cipantat Tengah, Tangerang Selatan, Banten
+                                    ' . htmlspecialchars($row['alamat']) . '
                                 </td>
                                 <td class="px-6 py-4">
-                                    Bandung, Cimahi , Garut, KDM, 15 Agustus 2009
+                                    ' . htmlspecialchars($row['tempat_lahir']) . ' 
                                 </td>
                                 <td class="px-6 py-4">
-                                    <button type="button" data-modal-target="modalUbah" data-modal-toggle="modalUbah"
+                                     <a type="button" href="edit_siswa.php?edit='.htmlspecialchars($row['nis']).'" 
                                         class="hover:cursor-pointer font-medium text-blue-600 dark:text-blue-500 hover:underline">
                                         EDIT
-                                    </button>
-                                    <button type="button" data-modal-target="modalHapus" data-modal-toggle="modalHapus"
+                                    </a>
+                                    <a type="button" href="?edit='.htmlspecialchars($row['nis']).'" onclick="return confirm("Yakin ingin menghapus data ini?");"
                                         class="font-medium text-red-600 dark:text-red-500 hover:underline">
                                         DELETE
-                                    </button>
+                                    </a>
                                 </td>
-                            </tr>
+                            </tr>';
+                            }
+                            ?>
                         </tbody>
                     </table>
                 </div>
@@ -328,13 +405,21 @@
                     </div>
                     <!-- Modal body -->
                     <div class="p-4 md:p-5 space-y-4">
-                        <form class="w-full">
+                        <form class="w-full" method="POST" action="">
+                        <div class="mb-4">
+                                <label for="NIS" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
+                                    NIS:
+                                </label>
+                                <input type="number" id="NIS" name="nis"
+                                    class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
+                                    placeholder="Masukkan NIS Siswa" required />
+                            </div>
                             <div class="mb-4">
                                 <label for="namaLengkap"
                                     class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     Nama Lengkap:
                                 </label>
-                                <input type="text" id="namaLengkap"
+                                <input type="text" id="namaLengkap" name="nama_lengkap_siswa"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan Nama Lengkap" required />
                             </div>
@@ -342,7 +427,7 @@
                                 <label for="NISN" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     NISN:
                                 </label>
-                                <input type="number" id="NISN"
+                                <input type="number" id="NISN" name="nisn"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan NISN Siswa" required />
                             </div>
@@ -350,16 +435,16 @@
                                 <label for="NIK" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     NIK:
                                 </label>
-                                <input type="number" id="NIK"
+                                <input type="number" id="NIK" name="nik_siswa"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan NIK Siswa" required />
                             </div>
                             <div class="mb-4">
-                                <label for="asalSekolah"
+                                <label for="asal_sekolah"
                                     class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     Asal Sekolah:
                                 </label>
-                                <input type="text" id="asalSekolah"
+                                <input type="text" id="asalSekolah" name="asal_sekolah"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan Asal Sekolah" required />
                             </div>
@@ -367,7 +452,7 @@
                                 <label for="alamat" class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     Alamat:
                                 </label>
-                                <input type="alamat" id="alamat"
+                                <input type="alamat" id="alamat" name="alamat"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan Alamat" required />
                             </div>
@@ -376,7 +461,7 @@
                                     class="block mb-2 text-lg font-medium text-[var(--txt-primary)]">
                                     Tempat Tanggal Lahir:
                                 </label>
-                                <input type="text" id="tempatTanggalLahir"
+                                <input type="text" id="tempatTanggalLahir" name="tempat_lahir"
                                     class="bg-transparent border border-[var(--txt-primary)]/30 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:border-[var(--bg-primary2)] block w-full p-2 ps-3"
                                     placeholder="Masukkan Tempat Tanggal Lahir" required />
                             </div>
@@ -385,7 +470,7 @@
                                     class="py-2 px-5 text-md hover:cursor-pointer font-medium text-gray-900 focus:outline-none bg-transparent rounded-lg border border-[var(--txt-primary)]/50 hover:bg-[var(--bg-primary2)]/10 focus:z-10 focus:ring-3 focus:ring-[var(--txt-primary)]/20">
                                     Batal
                                 </button>
-                                <button type="submit"
+                                <button type="submit" name="submit_tambah"
                                     class="text-[var(--txt-secondary)] ms-2 bg-[var(--bg-primary2)] hover:bg-[var(--bg-primary2)]/90 focus:ring-3 focus:outline-none focus:ring-[var(--bg-secondary)] font-bold rounded-lg text-md hover:cursor-pointer px-5 py-2 text-center">
                                     Tambah
                                 </button>
