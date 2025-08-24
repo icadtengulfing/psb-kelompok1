@@ -13,6 +13,9 @@ $query = "SELECT * FROM pendaftar WHERE nik = '$nik'";
 $result = mysqli_query($koneksi, $query);
 $user_data = mysqli_fetch_assoc($result);
 
+$query_dokumen = "SELECT * FROM dokumen WHERE nik = '{$user_data['nik']}'";
+$result_dokumen = mysqli_query($koneksi, $query_dokumen);
+
 $foto_profil_path = (!empty($user_data['foto_profil']) && $user_data['foto_profil'] != 'default-profile.jpg') 
                    ? "uploads/" . $user_data['foto_profil'] 
                    : "../assets/img/default-profile.jpg";
@@ -286,14 +289,67 @@ $foto_profil_path = (!empty($user_data['foto_profil']) && $user_data['foto_profi
                     <div
                         class="absolute top-0 left-0 bg-[var(--bg-primary2)] px-6 py-2 text-md md:text-lg text-semibold rounded-tl-lg rounded-br-xl shadow-lg text-[var(--txt-secondary)]">
                         Info Pendaftaran</div>
-                    <img src="../assets/img/logo-belum-daftar.png" class="mt-10 md:mt-0 opacity-50"
-                        alt="image siswa belum mendaftar">
-                    <p class="text-lg lg:text-2xl text-[var(--txt-primary)] mt-0 lg:mt-2 opacity-50">
-                        Anda belum melakukan pendaftaran
-                    </p>
-                </div>
+                        <div
+                    class="overflow-x-auto sm:rounded-lg border border-[var(--txt-primary)]/30 bg-[var(--bg-primary3)] shadow-md mt-2">
+                    <table class="w-full text-md text-left rtl:text-right text-[var(--txt-primary)] ">
+                        <thead class="text-md text-[var(--txt-primary)] uppercase bg-[var(--bg-primary2)]/10">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">
+                                    NIS
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    ID Jalur
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Jenis Dokumen
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Verifikasi
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Tanggal Upload
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Catatan
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            if (mysqli_num_rows($result_dokumen) > 0) {
+                            while ($row = mysqli_fetch_assoc($result_dokumen)) {
+                                    $jalur_mapping = [1 => 'Reguler', 2 => 'Afirmasi', 3 => 'Prestasi'];
 
-            </div>
+                                echo '<tr class="border-t border-[var(--txt-primary)]/10">
+                                <td class="px-6 py-4">
+                                    ' . htmlspecialchars($row['nis']) . '
+                                </td>
+                                <td class="px-6 py-4">
+                                    ' . htmlspecialchars($jalur_mapping[$row['id_jalur']]) . '
+                                </td>
+                                <td class="px-6 py-4">
+                                    ' . htmlspecialchars($row['jenis_dokumen']) . '
+                                </td>
+                                <td class="px-6 py-4">
+                                    ' . htmlspecialchars($row['status_verifikasi']) . '
+                                </td>
+                                <td class="px-6 py-4">
+                                    ' . htmlspecialchars($row['tanggal_upload']) . '
+                                </td>
+                                <td class="px-6 py-4">
+                                    ' . htmlspecialchars($row['catatan_admin']) . '
+                                </td>
+                            </tr>';
+                            }
+                        } else {
+                            echo '<tr class="border-t border-[var(--txt-primary)]/10">
+                            <td colspan="7" class="px-6 py-4 text-center text-[var(--txt-primary)]">Tidak ada data</td>
+                            </tr>';
+                        }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
         </div>
     </section>
 
