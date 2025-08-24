@@ -32,6 +32,10 @@ $foto_profil_path = (!empty($data['foto_profil']) && $data['foto_profil'] != 'de
                         $target_file = $upload_dir . $file_name;
                 
                         $allowed_types = ['image/jpeg', 'image/jpg', 'image/png'];
+
+                        if ($_FILES['fotoProfil']['size'] > 2 * 1024 * 1024) {
+                            $upload_errors[] = "Ukuran file $file_name terlalu besar.";
+                          }
                 
                         if (in_array($_FILES['fotoProfil']['type'], $allowed_types)) {
                             if (move_uploaded_file($_FILES['fotoProfil']['tmp_name'], $target_file)) {

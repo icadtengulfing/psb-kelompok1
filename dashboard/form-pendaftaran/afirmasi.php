@@ -1,8 +1,8 @@
 <?php
 session_start();
 if (!isset($_SESSION['nik'])) {
-  header('Location: ../form-login.php');
-  exit;
+    header('Location: ../form-login.php');
+    exit;
 }
 
 include '../koneksi.php';
@@ -16,128 +16,144 @@ $query = "SELECT * FROM pendaftar WHERE nik = '$nik'";
 $result = mysqli_query($koneksi, $query);
 $user_data = mysqli_fetch_assoc($result);
 
-$foto_profil_path = (!empty($user_data['foto_profil']) && $user_data['foto_profil'] != 'default-profile.jpg') 
-                   ? "../uploads/" . $user_data['foto_profil'] 
-                   : "../../assets/img/default-profile.jpg";
-if(isset($_POST['daftar_siswa'])) {
-    
+$foto_profil_path = (!empty($user_data['foto_profil']) && $user_data['foto_profil'] != 'default-profile.jpg')
+    ? "../uploads/" . $user_data['foto_profil']
+    : "../../assets/img/default-profile.jpg";
+if (isset($_POST['daftar_siswa'])) {
+
     // Escape data untuk mencegah SQL injection
     $nik = mysqli_real_escape_string($koneksi, $nik);
 
     $query_pendaftar = "SELECT id_pendaftar FROM pendaftar WHERE nik = '$nik'";
     $result_pendaftar = mysqli_query($koneksi, $query_pendaftar);
 
-if (mysqli_num_rows($result_pendaftar) > 0) {
-    $row_pendaftar = mysqli_fetch_assoc($result_pendaftar);
-    $id_pendaftar = $row_pendaftar['id_pendaftar'];
-} else {
-    die("Error: Data pendaftar tidak ditemukan!");
-}
-
-$cek_jalur = mysqli_query($koneksi, "SELECT id_jalur FROM jalur_pendaftaran WHERE jenis_jalur = 'Afirmasi' LIMIT 1");
-
-if (mysqli_num_rows($cek_jalur) > 0) {
-    $row = mysqli_fetch_assoc($cek_jalur);
-    $id_jalur = $row['id_jalur'];
-} else {
-    // Jika belum ada, insert dulu
-    mysqli_query($koneksi, "INSERT INTO jalur_pendaftaran (jenis_jalur) VALUES ('Afirmasi')");
-    $id_jalur = mysqli_insert_id($koneksi);
-}
-
-// Data siswa - escape semua input
-$nis = mysqli_real_escape_string($koneksi, $_POST['nis']);
-$nama_lengkap_siswa = mysqli_real_escape_string($koneksi, $_POST['nama_lengkap_siswa']);
-$nik_siswa = mysqli_real_escape_string($koneksi, $_POST['nik_siswa']);
-$nisn = mysqli_real_escape_string($koneksi, $_POST['nisn']);
-$asal_sekolah = mysqli_real_escape_string($koneksi, $_POST['asal_sekolah']);
-$alamat = mysqli_real_escape_string($koneksi, $_POST['alamat']);
-$tempat_lahir = mysqli_real_escape_string($koneksi, $_POST['tempat_lahir']);
-$tanggal_lahir = $_POST['tanggal_lahir'];
-
-$tanggal_lahir_mysql = NULL; 
-
-if (!empty($tanggal_lahir)) {
-    $timestamp = strtotime($tanggal_lahir);
-    
-    if ($timestamp !== false) {
-        $tanggal_lahir_mysql = date('Y-m-d', $timestamp);
+    if (mysqli_num_rows($result_pendaftar) > 0) {
+        $row_pendaftar = mysqli_fetch_assoc($result_pendaftar);
+        $id_pendaftar = $row_pendaftar['id_pendaftar'];
+    } else {
+        die("Error: Data pendaftar tidak ditemukan!");
     }
-} 
 
-$query_siswa = "INSERT INTO siswa (nis, id_pendaftar, id_jalur, nama_lengkap_siswa, nik_siswa, nisn, asal_sekolah, alamat, tempat_lahir, tanggal_lahir) 
+    $cek_jalur = mysqli_query($koneksi, "SELECT id_jalur FROM jalur_pendaftaran WHERE jenis_jalur = 'Afirmasi' LIMIT 1");
+
+    if (mysqli_num_rows($cek_jalur) > 0) {
+        $row = mysqli_fetch_assoc($cek_jalur);
+        $id_jalur = $row['id_jalur'];
+    } else {
+        mysqli_query($koneksi, "INSERT INTO jalur_pendaftaran (jenis_jalur) VALUES ('Afirmasi')");
+        $id_jalur = mysqli_insert_id($koneksi);
+    }
+
+    // Data siswa - escape semua input
+    $nis = mysqli_real_escape_string($koneksi, $_POST['nis']);
+    $nama_lengkap_siswa = mysqli_real_escape_string($koneksi, $_POST['nama_lengkap_siswa']);
+    $nik_siswa = mysqli_real_escape_string($koneksi, $_POST['nik_siswa']);
+    $nisn = mysqli_real_escape_string($koneksi, $_POST['nisn']);
+    $asal_sekolah = mysqli_real_escape_string($koneksi, $_POST['asal_sekolah']);
+    $alamat = mysqli_real_escape_string($koneksi, $_POST['alamat']);
+    $tempat_lahir = mysqli_real_escape_string($koneksi, $_POST['tempat_lahir']);
+    $tanggal_lahir = $_POST['tanggal_lahir'];
+
+    $tanggal_lahir_mysql = NULL;
+
+    if (!empty($tanggal_lahir)) {
+        $timestamp = strtotime($tanggal_lahir);
+
+        if ($timestamp !== false) {
+            $tanggal_lahir_mysql = date('Y-m-d', $timestamp);
+        }
+    }
+
+    $query_siswa = "INSERT INTO siswa (nis, id_pendaftar, id_jalur, nama_lengkap_siswa, nik_siswa, nisn, asal_sekolah, alamat, tempat_lahir, tanggal_lahir) 
                 VALUES ('$nis', '$id_pendaftar', '$id_jalur', '$nama_lengkap_siswa', '$nik_siswa', '$nisn', '$asal_sekolah', '$alamat', '$tempat_lahir', '$tanggal_lahir_mysql')";
-$result = mysqli_query($koneksi, $query_siswa);
+    $result = mysqli_query($koneksi, $query_siswa);
 
-if ($result) {
-    $input_files = [
-        'kartuKeluarga' => 'Kartu Keluarga',
-        'ijazahSmp' => 'Ijazah SMP', 
-        'SKL' => 'Surat Keterangan Lulus',
-        'akteLahir' => 'Akte Lahir',
-        'pasFoto' => 'Pas Foto 3x4',
-        'SKCK' => 'SKCK',
-        'KPIP' => 'KPIP',
-        'SKTM' => 'SKTM',
-        'disablitias' => 'Disabilitas'
-    ];
+    if ($result) {
+        $input_files = [
+            'kartuKeluarga' => 'Kartu Keluarga',
+            'ijazahSmp' => 'Ijazah SMP',
+            'SKL' => 'Surat Keterangan Lulus',
+            'akteLahir' => 'Akte Lahir',
+            'pasFoto' => 'Pas Foto 3x4',
+            'SKCK' => 'SKCK',
+            'KPIP' => 'KPIP',
+            'SKTM' => 'SKTM',
+            'disablitias' => 'Disabilitas'
+        ];
 
-    $upload_errors = [];
-    $upload_success = [];
+        $upload_errors = [];
+        $upload_success = [];
 
-    foreach ($input_files as $input_name => $jenis_dokumen) {
-        if (isset($_FILES[$input_name]) && $_FILES[$input_name]['error'] === 0) {
+        foreach ($input_files as $input_name => $jenis_dokumen) {
+            if (isset($_FILES[$input_name]) && $_FILES[$input_name]['error'] === 0) {
 
-            $base_dir = "uploads/dokumen/";
-            $jenis_folder = strtolower(str_replace(' ', '_', $jenis_dokumen));
-            $target_dir = $base_dir . $jenis_folder . "/";
-            
-            if (!file_exists($target_dir)) {
-                mkdir($target_dir, 0755, true);
-            }
-            
-            // DIPERBAIKI: Gunakan $input_name, bukan 'dokumen'
-            $file_ext = strtolower(pathinfo($_FILES[$input_name]['name'], PATHINFO_EXTENSION));
-            
-            // Validasi ekstensi file
-            $allowed_extensions = ['jpg', 'jpeg', 'png', 'pdf'];
-            if (!in_array($file_ext, $allowed_extensions)) {
-                $upload_errors[] = "Format file $jenis_dokumen tidak valid.";
-                continue;
-            }
-            
-            // Validasi ukuran file (max 2MB)
-            if ($_FILES[$input_name]['size'] > 2 * 1024 * 1024) {
-                $upload_errors[] = "Ukuran file $jenis_dokumen terlalu besar.";
-                continue;
-            }
-            
-            $new_filename = $nis . '_' . $input_name . '_' . time() . '.' . $file_ext;
-            $file_path = $target_dir . $new_filename;
+                $base_dir = "uploads/dokumen/";
+                $jenis_folder = strtolower(str_replace(' ', '_', $jenis_dokumen));
+                $target_dir = $base_dir . $jenis_folder . "/";
 
-            // DIPERBAIKI: Gunakan $input_name
-            if (move_uploaded_file($_FILES[$input_name]['tmp_name'], $file_path)) {
-                // Escape data untuk database
-                $nis_escaped = mysqli_real_escape_string($koneksi, $nis);
-                $jenis_dokumen_escaped = mysqli_real_escape_string($koneksi, $jenis_dokumen);
-                $file_path_escaped = mysqli_real_escape_string($koneksi, $file_path);
-                
-                // Insert ke database
-                $query_dokumen = "INSERT INTO dokumen (nis, jenis_dokumen, file_path, tanggal_upload, status_verifikasi) 
-                            VALUES ('$nis_escaped', '$jenis_dokumen_escaped', '$file_path_escaped', NOW(), 'Menunggu')";
-                $result_dokumen = mysqli_query($koneksi, $query_dokumen);
-                
-                if ($result_dokumen) {
-                    $upload_success[] = $jenis_dokumen;
-                } else {
-                    $upload_errors[] = "Gagal menyimpan data $jenis_dokumen: " . mysqli_error($koneksi);
+                if (!file_exists($target_dir)) {
+                    mkdir($target_dir, 0755, true);
                 }
-            } else {
-                $upload_errors[] = "Gagal mengupload file $jenis_dokumen!"; 
-           }
-         }
-       }
-   }
+
+                // DIPERBAIKI: Gunakan $input_name, bukan 'dokumen'
+                $file_ext = strtolower(pathinfo($_FILES[$input_name]['name'], PATHINFO_EXTENSION));
+
+                // Validasi ekstensi file
+                $allowed_extensions = ['jpg', 'jpeg', 'png', 'pdf'];
+                if (!in_array($file_ext, $allowed_extensions)) {
+                    $upload_errors[] = "Format file $jenis_dokumen tidak valid.";
+                    continue;
+                }
+
+                // Validasi ukuran file (max 2MB)
+                if ($_FILES[$input_name]['size'] > 2 * 1024 * 1024) {
+                    $upload_errors[] = "Ukuran file $jenis_dokumen terlalu besar.";
+                    continue;
+                }
+
+                $new_filename = $nis . '_' . $input_name . '_' . time() . '.' . $file_ext;
+                $file_path = $target_dir . $new_filename;
+
+                // DIPERBAIKI: Gunakan $input_name
+                if (move_uploaded_file($_FILES[$input_name]['tmp_name'], $file_path)) {
+                    // Escape data untuk database
+                    $nis_escaped = mysqli_real_escape_string($koneksi, $nis);
+                    $jenis_dokumen_escaped = mysqli_real_escape_string($koneksi, $jenis_dokumen);
+                    $file_path_escaped = mysqli_real_escape_string($koneksi, $file_path);
+
+                    // Insert ke database
+                    $query_dokumen = "INSERT INTO dokumen (nis, nik, jenis_dokumen, file_path, tanggal_upload, status_verifikasi, id_jalur) 
+                    VALUES ('$nis_escaped', '$nik', '$jenis_dokumen_escaped', '$file_path_escaped', NOW(), 'Menunggu', $id_jalur)";
+                    $result_dokumen = mysqli_query($koneksi, $query_dokumen);
+
+                    if ($result_dokumen) {
+                        $upload_success[] = $jenis_dokumen;
+                    } else {
+                        $upload_errors[] = "Gagal menyimpan data $jenis_dokumen: " . mysqli_error($koneksi);
+                    }
+                } else {
+                    $upload_errors[] = "Gagal mengupload file $jenis_dokumen!";
+                }
+            }
+        }
+        $_SESSION['alert_message'] = '<div id="alert-3" class="flex items-center p-4 mb-4 text-green-800 rounded-lg bg-green-50 border border-green-300" role="alert">
+ <svg class="shrink-0 w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+   <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+ </svg>
+ <span class="sr-only">Info</span>
+ <div class="ms-3 text-sm font-medium">
+   Data berhasil dikirim dan sedang dalam proses verifikasi. Silakan tunggu konfirmasi selanjutnya.
+ </div>
+ <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-green-50 text-green-500 rounded-lg focus:ring-2 focus:ring-green-400 p-1.5 hover:bg-green-200 inline-flex items-center justify-center h-8 w-8" data-dismiss-target="#alert-3" aria-label="Close">
+   <span class="sr-only">Close</span>
+   <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+   </svg>
+ </button>
+</div>';
+header("Location: afirmasi.php");
+exit;
+    }
 }
 ?>
 <!doctype html>
@@ -391,8 +407,8 @@ if ($result) {
                     alt="Image Greet Dashboard">
             </div>
             <div class="flex flex-col gap-8 mb-8">
-            <form class="max-w-4xl" method="post" enctype="multipart/form-data">
-                <div class="mb-5">
+                <form class="max-w-4xl" method="post" enctype="multipart/form-data">
+                    <div class="mb-5">
                         <label for="nis" class="block mb-2 text-md md:text-lg font-medium text-[var(--txt-primary)]">
                             NIS
                         </label>
@@ -494,7 +510,7 @@ if ($result) {
                                             class="font-semibold">Klik untuk mengunggah</span></p>
                                     <p class="text-sm text-[var(--txt-primary)]/50">PNG, JPG or JPEG (MAX. 2MB)</p>
                                 </div>
-                                <input id="kartuKeluarga" type="file" class="hidden"
+                                <input id="kartuKeluarga" type="file" class="hidden" name="kartuKeluarga"
                                     onchange="previewFileName('kartuKeluarga', 'previewKK')" />
                             </label>
                             <!-- Penampil nama file -->
@@ -516,7 +532,7 @@ if ($result) {
                                     <p class="text-sm text-[var(--txt-primary)]/50">PNG, JPG or JPEG (MAX.
                                         2MB)</p>
                                 </div>
-                                <input id="ijazahSmp" type="file" class="hidden"
+                                <input id="ijazahSmp" type="file" class="hidden" name="ijazahSmp"
                                     onchange="previewFileName('ijazahSmp', 'previewIjazah')" />
                             </label>
                             <!-- Penampil nama file -->
@@ -538,7 +554,7 @@ if ($result) {
                                     <p class="text-sm text-[var(--txt-primary)]/50">PNG, JPG or JPEG (MAX.
                                         2MB)</p>
                                 </div>
-                                <input id="SKL" type="file" class="hidden"
+                                <input id="SKL" type="file" class="hidden" name="SKL"
                                     onchange="previewFileName('SKL', 'previewSKL')" />
                             </label>
                             <!-- Penampil nama file -->
@@ -563,7 +579,7 @@ if ($result) {
                                     <p class="text-sm text-[var(--txt-primary)]/50">PNG, JPG or JPEG (MAX.
                                         2MB)</p>
                                 </div>
-                                <input id="akteLahir" type="file" class="hidden"
+                                <input id="akteLahir" type="file" class="hidden" name="akteLahir"
                                     onchange="previewFileName('akteLahir', 'previewAkteLahir')" />
                             </label>
                             <!-- Penampil nama file -->
@@ -585,7 +601,7 @@ if ($result) {
                                     <p class="text-sm text-[var(--txt-primary)]/50">PNG, JPG or JPEG (MAX.
                                         2MB)</p>
                                 </div>
-                                <input id="pasFoto" type="file" class="hidden"
+                                <input id="pasFoto" type="file" class="hidden" name="pasFoto"
                                     onchange="previewFileName('pasFoto', 'previewPasFoto')" />
                             </label>
                             <!-- Penampil nama file -->
@@ -607,7 +623,7 @@ if ($result) {
                                     <p class="text-sm text-[var(--txt-primary)]/50">PNG, JPG or JPEG (MAX.
                                         2MB)</p>
                                 </div>
-                                <input id="SKCK" type="file" class="hidden"
+                                <input id="SKCK" type="file" class="hidden" name="SKCK"
                                     onchange="previewFileName('SKCK', 'previewSKCK')" />
                             </label>
                             <!-- Penampil nama file -->

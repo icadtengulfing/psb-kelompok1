@@ -5,79 +5,84 @@ if (!isset($_SESSION['username'])) {
   header('location: index.php');
   exit;
 }
-$query_data = mysqli_query( $koneksi, "SELECT * FROM dokumen WHERE id_dokumen='$_GET[edit]'" );
-$data = mysqli_fetch_array( $query_data );
+$upload_errors = [];
+$query_data = mysqli_query($koneksi, "SELECT * FROM dokumen WHERE id_dokumen='$_GET[edit]'");
+$data = mysqli_fetch_array($query_data);
 
 if (isset($_POST['ubah_dokumen'])) {
-$id_dokumen = mysqli_escape_string($koneksi, $_GET['edit']);
-$jenis_dokumen = mysqli_escape_string($koneksi, $_POST['jenis_dokumen']);
-$tanggal_upload = mysqli_escape_string($koneksi, $_POST['tanggal_upload']);
-$catatan_admin = mysqli_escape_string($koneksi, $_POST['catatan_admin']);
-$nis = $data['nis'];
+  $id_dokumen = mysqli_escape_string($koneksi, $_GET['edit']);
+  $jenis_dokumen = mysqli_escape_string($koneksi, $_POST['jenis_dokumen']);
+  $tanggal_upload = mysqli_escape_string($koneksi, $_POST['tanggal_upload']);
+  $catatan_admin = mysqli_escape_string($koneksi, $_POST['catatan_admin']);
+  $nis = $data['nis'];
 
   $input_files = [
-      'kartuKeluarga' => 'Kartu Keluarga',
-      'ijazahSmp' => 'Ijazah SMP',
-      'SKL' => 'Surat Keterangan Lulus',
-      'akteLahir' => 'Akte Lahir',
-      'pasFoto' => 'Pas Foto 3x4',
-      'SKCK' => 'SKCK',
-      'KPIP' => 'KPIP',
-      'SKTM' => 'SKTM',
-      'disablitias' => 'Disabilitas'
+    'kartuKeluarga' => 'Kartu Keluarga',
+    'ijazahSmp' => 'Ijazah SMP',
+    'SKL' => 'Surat Keterangan Lulus',
+    'akteLahir' => 'Akte Lahir',
+    'pasFoto' => 'Pas Foto 3x4',
+    'SKCK' => 'SKCK',
+    'KPIP' => 'KPIP',
+    'SKTM' => 'SKTM',
+    'disablitias' => 'Disabilitas'
   ];
 
-  $upload_errors = [];
-  $upload_success = [];
+  $file_path = $data['file_path'];
 
-      if (isset($_FILES['file_path']) && $_FILES['file_path']['error'] === 0) {
-          $base_dir = "../dashboard/form-pendaftaran/uploads/dokumen/";
-          $jenis_folder = strtolower(str_replace(' ', '_', $jenis_dokumen));
-          $target_dir = $base_dir . $jenis_folder . "/";
+  if (isset($_FILES['file_path']) && $_FILES['file_path']['error'] === 0) {
+    $upload_dir = "../dashboard/form-pendaftaran/uploads/dokumen/";
+    $jenis_folder = strtolower(str_replace(' ', '_', $jenis_dokumen));
+    $target_dir = $upload_dir . $jenis_folder . "/";
 
-          if (!file_exists($target_dir)) {
-              mkdir($target_dir, 0755, true);
-          }
+    $file_ext = strtolower(pathinfo($_FILES['file_path']['name'], PATHINFO_EXTENSION));
+    // Validasi ekstensi file
+    $allowed_extensions = ['jpg', 'jpeg', 'png', 'pdf'];
+    if (!in_array($file_ext, $allowed_extensions)) {
+      $upload_errors[] = "Format file $jenis_dokumen tidak valid.";
+    }
 
-          $file_ext = strtolower(pathinfo($_FILES['file_path']['name'], PATHINFO_EXTENSION));
-          // Validasi ekstensi file
-          $allowed_extensions = ['jpg', 'jpeg', 'png', 'pdf'];
-          if (!in_array($file_ext, $allowed_extensions)) {
-              $upload_errors[] = "Format file $jenis_dokumen tidak valid.";
-          }
+    // Validasi ukuran file (max 2MB)
+    if ($_FILES['file_path']['size'] > 2 * 1024 * 1024) {
+      $upload_errors[] = "Ukuran file $jenis_dokumen terlalu besar.";
+    }
 
-          // Validasi ukuran file (max 2MB)
-          if ($_FILES['file_path']['size'] > 2 * 1024 * 1024) {
-              $upload_errors[] = "Ukuran file $jenis_dokumen terlalu besar.";
-          }
+    $new_filename = $nis . '_' . $id_dokumen . '_' . time() . '.' . $file_ext;
+    $file_path = $target_dir . $new_filename;
 
-          $new_filename = $nis . '_' . $id_dokumen . '_' . time() . '.' . $file_ext;
-          $file_path = $target_dir . $new_filename;
-
-          // uopload file
-          if (move_uploaded_file($_FILES['file_path']['tmp_name'], $file_path)) {
-            if (!empty($data['file_path']) && file_exists($data['file_path'])) {
-              unlink($data['file_path']);
-            }
-              // updates ke database
-              $query_edit = "UPDATE dokumen 
-                                   SET jenis_dokumen = '$jenis_dokumen',
-                                       file_path = '$file_path',
-                                       tanggal_upload = NOW(),
-                                       catatan_admin = '$catatan_admin'
-                                   WHERE id_dokumen = '$id_dokumen'";
-              $result_dokumen = mysqli_query($koneksi, $query_edit);
-
-              if ($result_dokumen) {
-                  $upload_success[] = $jenis_dokumen;
-              } else {
-                  $upload_errors[] = "Gagal Uploads File $jenis_dokumen: " . mysqli_error($koneksi);
-              }
-          } else {
-              $upload_errors[] = "Gagal mengupload file $jenis_dokumen!";
-          }
+    // uopload file
+    if (move_uploaded_file($_FILES['file_path']['tmp_name'], $file_path)) {
+      if (!empty($data['file_path']) && file_exists($data['file_path'])) {
+        unlink($data['file_path']);
       }
+    }
+  } else {
+    $file_path = $data['file_path'];
   }
+
+
+        // updates ke database
+        $query_edit = "UPDATE dokumen 
+        SET jenis_dokumen = '$jenis_dokumen',
+            file_path = '$file_path',
+            tanggal_upload = NOW(),
+            catatan_admin = '$catatan_admin'
+        WHERE id_dokumen = '$id_dokumen'";
+        $result_dokumen = mysqli_query($koneksi, $query_edit);
+
+        if ($result_dokumen) {
+          echo "<script>
+                  alert('Data berhasil diubah!');
+                  window.location.href = 'daftar-dokumen.php';
+                </script>";
+      } else {
+          echo "<script>
+                  alert('Gagal mengubah data!');
+                  window.location.href = 'daftar-dokumen.php';
+                </script>";
+      }
+}
+
 ?>
 <!doctype html>
 <html>
@@ -157,7 +162,7 @@ $nis = $data['nis'];
         </li>
         <li>
           <a href="daftar-akun.php"
-            class="flex items-center py-2 px-4 text-[var(--txt-primary)] rounded-lg bg-[var(--bg-primary2)]/30 hover:bg-[var(--bg-primary2)]/20 group transition duration-200">
+            class="flex items-center py-2 px-4 text-[var(--txt-primary)] rounded-lg hover:bg-[var(--bg-primary2)]/20 group transition duration-200">
             <svg class="w-6 h-6 text-[var(--txt-primary)]/70 transition duration-75 group-hover:text-[var(--txt-primary)]"
               aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
               fill="currentColor" viewBox="0 0 24 24">
@@ -196,7 +201,7 @@ $nis = $data['nis'];
         </li>
         <li>
           <a href="daftar-dokumen.php"
-            class="flex items-center py-2 px-4 text-[var(--txt-primary)] rounded-lg hover:bg-[var(--bg-primary2)]/10 group transition duration-200">
+            class="flex items-center py-2 px-4 text-[var(--txt-primary)] rounded-lg bg-[var(--bg-primary2)]/30 hover:bg-[var(--bg-primary2)]/10 group transition duration-200">
             <svg class="w-6 h-6 text-[var(--txt-primary)]/70 transition duration-75 group-hover:text-[var(--txt-primary)]"
               aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
               fill="currentColor" viewBox="0 0 24 24">
@@ -214,6 +219,37 @@ $nis = $data['nis'];
   <!-- Tutup Sidebar -->
   <section class="p-4 lg:p-8 sm:ml-64">
     <div class="mt-26 lg:mt-24">
+      <?php if (!empty($message)): ?>
+        <div class="flex items-center p-4 mb-4 text-green-800 rounded-lg bg-green-50 border border-green-300" role="alert">
+          <svg class="shrink-0 w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+          </svg>
+          <div class="ms-3 text-sm font-medium">
+            <?php echo htmlspecialchars($message); ?>
+          </div>
+          <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-green-50 text-green-500 rounded-lg focus:ring-2 focus:ring-green-400 p-1.5 hover:bg-green-200 inline-flex items-center justify-center h-8 w-8" onclick="this.parentElement.style.display='none'">
+            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+            </svg>
+          </button>
+        </div>
+      <?php endif; ?>
+
+      <?php if (!empty($error)): ?>
+        <div class="flex items-center p-4 mb-4 text-red-800 rounded-lg bg-red-50 border border-red-300" role="alert">
+          <svg class="shrink-0 w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+          </svg>
+          <div class="ms-3 text-sm font-medium">
+            <?php echo htmlspecialchars($error); ?>
+          </div>
+          <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-red-50 text-red-500 rounded-lg focus:ring-2 focus:ring-red-400 p-1.5 hover:bg-red-200 inline-flex items-center justify-center h-8 w-8" onclick="this.parentElement.style.display='none'">
+            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+            </svg>
+          </button>
+        </div>
+      <?php endif; ?>
       <div class="grid grid-cols-1 xl:grid-cols-[3fr_1fr] gap-4 lg:gap-8 mb-8">
         <div
           class="flex flex-col justify-center items-start p-6 lg:p-12 rounded-xl bg-[var(--bg-primary3)] border border-[var(--bg-primary2)]/30 shadow-md">
@@ -237,16 +273,16 @@ $nis = $data['nis'];
             </label>
             <input type="text" id="id_dokumen" name="id_dokumen"
               class="bg-transparent border border-[var(--txt-primary)]/50 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:bg-[var(--bg-primary2)]/10 focus:border-[var(--bg-primary2)] block w-full py-2.5 px-3.5"
-              placeholder="Masukkan Nama Lengkap" value="<?php echo htmlspecialchars($data['id_dokumen']); ?>" disabled/>
+              placeholder="Masukkan Nama Lengkap" value="<?php echo htmlspecialchars($data['id_dokumen']); ?>" disabled />
           </div>
 
           <div class="mb-5">
             <label for="jenis_dokumen" class="block mb-2 text-md md:text-lg font-medium text-[var(--txt-primary)]">
-             Jenis Dokumen
+              Jenis Dokumen
             </label>
             <input type="text" id="jenis_dokumen" name="jenis_dokumen"
               class="bg-transparent border border-[var(--txt-primary)]/50 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:bg-[var(--bg-primary2)]/10 focus:border-[var(--bg-primary2)] block w-full py-2.5 px-3.5"
-              placeholder="Masukkan Jenis Dok" value="<?php echo $data['jenis_dokumen']; ?>"/>
+              placeholder="Masukkan Jenis Dok" value="<?php echo $data['jenis_dokumen']; ?>" />
           </div>
 
           <div class="mb-5">
@@ -255,8 +291,8 @@ $nis = $data['nis'];
             </label>
             <input type="file" id="file_path" name="file_path"
               class="bg-transparent border border-[var(--txt-primary)]/50 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:bg-[var(--bg-primary2)]/10 focus:border-[var(--bg-primary2)] block w-full py-2.5 px-3.5"
-              placeholder="Masukkan File Path" value="<?php echo $data['file_path']; ?>" />
-              <p>  File saat ini: <?php echo $data['file_path']; ?></p>
+              placeholder="Pilih File Baru" />
+            <p> File saat ini: <?php echo $data['file_path']; ?></p>
           </div>
 
           <div class="mb-5">
@@ -269,7 +305,7 @@ $nis = $data['nis'];
           </div>
 
           <div class="mb-5">
-            <label for="nik" class="block mb-2 text-md md:text-lg font-medium text-[var(--txt-primary)]">
+            <label for="catatan_admin" class="block mb-2 text-md md:text-lg font-medium text-[var(--txt-primary)]">
               Catatan
             </label>
             <input type="text" id="catatan_admin" name="catatan_admin"

@@ -122,10 +122,9 @@ if ($result) {
                 $file_path_escaped = mysqli_real_escape_string($koneksi, $file_path);
                 
                 // Insert ke database
-                $query_dokumen = "INSERT INTO dokumen (nis, jenis_dokumen, file_path, tanggal_upload, status_verifikasi) 
-                            VALUES ('$nis_escaped', '$jenis_dokumen_escaped', '$file_path_escaped', NOW(), 'Menunggu')";
+                $query_dokumen = "INSERT INTO dokumen (nis, nik, jenis_dokumen, file_path, tanggal_upload, status_verifikasi, id_jalur) 
+                            VALUES ('$nis_escaped', '$nik', '$jenis_dokumen_escaped', '$file_path_escaped', NOW(), 'Menunggu', $id_jalur)";
                 $result_dokumen = mysqli_query($koneksi, $query_dokumen);
-                
                 if ($result_dokumen) {
                     $upload_success[] = $jenis_dokumen;
                 } else {
@@ -135,6 +134,23 @@ if ($result) {
                 $upload_errors[] = "Gagal mengupload file $jenis_dokumen!"; 
            }
          }
+         $_SESSION['alert_message'] = '<div id="alert-3" class="flex items-center p-4 mb-4 text-green-800 rounded-lg bg-green-50 border border-green-300" role="alert">
+ <svg class="shrink-0 w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+   <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+ </svg>
+ <span class="sr-only">Info</span>
+ <div class="ms-3 text-sm font-medium">
+   Data berhasil dikirim dan sedang dalam proses verifikasi. Silakan tunggu konfirmasi selanjutnya.
+ </div>
+ <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-green-50 text-green-500 rounded-lg focus:ring-2 focus:ring-green-400 p-1.5 hover:bg-green-200 inline-flex items-center justify-center h-8 w-8" data-dismiss-target="#alert-3" aria-label="Close">
+   <span class="sr-only">Close</span>
+   <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+   </svg>
+ </button>
+</div>';
+header("Location: prestasi.php");
+exit;
        }
    }
 }
@@ -494,7 +510,7 @@ if ($result) {
                                             class="font-semibold">Klik untuk mengunggah</span></p>
                                     <p class="text-sm text-[var(--txt-primary)]/50">PNG, JPG or JPEG (MAX. 2MB)</p>
                                 </div>
-                                <input id="kartuKeluarga" type="file" class="hidden"
+                                <input id="kartuKeluarga" type="file" name="kartuKeluarga" class="hidden"
                                     onchange="previewFileName('kartuKeluarga', 'previewKK')" />
                             </label>
                             <!-- Penampil nama file -->
@@ -516,7 +532,7 @@ if ($result) {
                                     <p class="text-sm text-[var(--txt-primary)]/50">PNG, JPG or JPEG (MAX.
                                         2MB)</p>
                                 </div>
-                                <input id="ijazahSmp" type="file" class="hidden"
+                                <input id="ijazahSmp" type="file" class="hidden" name="ijazahSmp"
                                     onchange="previewFileName('ijazahSmp', 'previewIjazah')" />
                             </label>
                             <!-- Penampil nama file -->
@@ -538,7 +554,7 @@ if ($result) {
                                     <p class="text-sm text-[var(--txt-primary)]/50">PNG, JPG or JPEG (MAX.
                                         2MB)</p>
                                 </div>
-                                <input id="SKL" type="file" class="hidden"
+                                <input id="SKL" type="file" class="hidden" name="SKL"
                                     onchange="previewFileName('SKL', 'previewSKL')" />
                             </label>
                             <!-- Penampil nama file -->

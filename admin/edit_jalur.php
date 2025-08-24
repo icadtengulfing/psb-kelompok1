@@ -16,7 +16,7 @@ if (isset($_POST['ubah_akun'])) {
   // hash password
   $query_edit = "UPDATE jalur_pendaftaran 
                                    SET jenis_jalur = '$jenis_jalur',
-                                       kuota = '$kuota',
+                                    kuota = '$kuota'
                                    WHERE id_jalur = '$id_jalur'";
 
   $result_edit = mysqli_query($koneksi, $query_edit);
@@ -24,12 +24,12 @@ if (isset($_POST['ubah_akun'])) {
   if ($result_edit) {
     echo "<script>
                                 alert('Data berhasil diubah!');
-                                window.location.href = 'daftar-siswa.php';
+                                window.location.href = 'daftar-jalur.php';
                               </script>";
   } else {
     echo "<script>
                                 alert('Gagal mengubah data!');
-                                window.location.href = 'edit-siswa.php';
+                                window.location.href = 'edit-jalur.php';
                               </script>";
   }
 }
@@ -112,7 +112,7 @@ if (isset($_POST['ubah_akun'])) {
         </li>
         <li>
           <a href="daftar-akun.php"
-            class="flex items-center py-2 px-4 text-[var(--txt-primary)] rounded-lg bg-[var(--bg-primary2)]/30 hover:bg-[var(--bg-primary2)]/20 group transition duration-200">
+            class="flex items-center py-2 px-4 text-[var(--txt-primary)] rounded-lg hover:bg-[var(--bg-primary2)]/20 group transition duration-200">
             <svg class="w-6 h-6 text-[var(--txt-primary)]/70 transition duration-75 group-hover:text-[var(--txt-primary)]"
               aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
               fill="currentColor" viewBox="0 0 24 24">
@@ -125,7 +125,7 @@ if (isset($_POST['ubah_akun'])) {
         </li>
         <li>
           <a href="daftar-siswa.php"
-            class="flex items-center py-2 px-4 text-[var(--txt-primary)] rounded-lg hover:bg-[var(--bg-primary2)]/10 group transition duration-200">
+             class="flex items-center py-2 px-4 text-[var(--txt-primary)] rounded-lg hover:bg-[var(--bg-primary2)]/10 group transition duration-200">
             <svg class="w-6 h-6 text-[var(--txt-primary)]/70 transition duration-75 group-hover:text-[var(--txt-primary)]"
               aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
               fill="currentColor" viewBox="0 0 24 24">
@@ -139,7 +139,7 @@ if (isset($_POST['ubah_akun'])) {
         </li>
         <li>
           <a href="daftar-kuota.php"
-            class="flex items-center py-2 px-4 text-[var(--txt-primary)] rounded-lg hover:bg-[var(--bg-primary2)]/10 group transition duration-200">
+            class="flex items-center py-2 px-4 text-[var(--txt-primary)] rounded-lg bg-[var(--bg-primary2)]/30 hover:bg-[var(--bg-primary2)]/10 group transition duration-200">
             <svg class="w-6 h-6 text-[var(--txt-primary)]/70 transition duration-75 group-hover:text-[var(--txt-primary)]"
               aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
               fill="currentColor" viewBox="0 0 24 24">
@@ -191,9 +191,9 @@ if (isset($_POST['ubah_akun'])) {
             <label for="id_jalur" class="block mb-2 text-md md:text-lg font-medium text-[var(--txt-primary)]">
               ID Jalur
             </label>
-            <input type="number" id="id_jalur" name="id_jalur"
+            <input type="number" id="id_jalur" name="id_jalur" readonly
               class="bg-transparent border border-[var(--txt-primary)]/50 text-[var(--txt-primary)] text-md rounded-lg focus:ring-[var(--bg-primary2)] focus:bg-[var(--bg-primary2)]/10 focus:border-[var(--bg-primary2)] block w-full py-2.5 px-3.5"
-              placeholder="" value="<?php echo $data['id_jalur']; ?>" disabled/>
+              placeholder="" value="<?php echo $data['id_jalur']; ?>"/>
 
           <div class="mb-5">
             <label for="jenis_jalur" class="block mb-2 text-md md:text-lg font-medium text-[var(--txt-primary)]">

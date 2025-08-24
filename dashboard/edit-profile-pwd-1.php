@@ -326,7 +326,9 @@ if (isset($_POST['ubah_password'])) {
 
     <!-- Main Content -->
 
-    <?php if (!empty($message)): ?>
+    <section class="p-4 lg:p-8 sm:ml-64">
+        <div class="mt-18 lg:mt-14">
+        <?php if (!empty($message)): ?>
         <div class="mb-6 p-4 text-green-800 border border-green-300 rounded-lg bg-green-50">
           <?php echo htmlspecialchars($message); ?>
         </div>
@@ -337,9 +339,6 @@ if (isset($_POST['ubah_password'])) {
           <?php echo htmlspecialchars($error); ?>
         </div>
         <?php endif; ?>
-
-    <section class="p-4 lg:p-8 sm:ml-64">
-        <div class="mt-18 lg:mt-14">
             <div class="grid grid-cols-1 lg:grid-cols-[5fr_1fr] gap-4 lg:gap-8 mb-20 lg:mb-8">
                 <div
                     class="flex flex-col justify-center items-start p-6 lg:p-12 rounded-xl bg-[var(--bg-primary3)] border border-[var(--bg-primary2)]/30 shadow-md">

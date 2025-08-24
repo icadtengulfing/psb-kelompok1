@@ -80,7 +80,6 @@ if (isset($_POST['update_data'])) {
     $nama_lengkap = $_POST['namaLengkap'];
     $email = $_POST['email'];
 
-    // Escape input untuk mencegah SQL Injection
     $nama_lengkap_escaped = mysqli_real_escape_string($koneksi, $nama_lengkap);
     $email_escaped = mysqli_real_escape_string($koneksi, $email);
     $nik_escaped = mysqli_real_escape_string($koneksi, $nik);
@@ -323,21 +322,26 @@ $foto_profil_path = (!empty($user_data['foto_profil']) && $user_data['foto_profi
     <!-- Tutup Sidebar -->
 
     <!-- Main Content -->
-    <?php if (!empty($message)): ?>
-        <div class="mb-6 p-4 text-green-800 border border-green-300 rounded-lg bg-green-50">
-          <?php echo htmlspecialchars($message); ?>
+    <section class="p-4 lg:p-8 sm:ml-64">
+        <div class="mt-18 lg:mt-14">
+        <?php if (!empty($message)): ?>
+        <div class="flex items-center p-4 mb-4 text-green-800 rounded-lg bg-green-50 border border-green-300" role="alert">
+          <svg class="shrink-0 w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+          </svg>
+          <div class="ms-3 text-sm font-medium">
+            <?php echo $message; ?>
+          </div>
         </div>
         <?php endif; ?>
         
         <?php if (!empty($error)): ?>
-        <div class="mb-6 p-4 text-red-800 border border-red-300 rounded-lg bg-red-50">
-          <?php echo htmlspecialchars($error); ?>
+        <div class="flex items-center p-4 mb-4 text-red-800 rounded-lg bg-red-50 border border-red-300" role="alert">
+          <div class="ms-3 text-sm font-medium">
+            <?php echo $error; ?>
+          </div>
         </div>
         <?php endif; ?>
-        
-
-    <section class="p-4 lg:p-8 sm:ml-64">
-        <div class="mt-18 lg:mt-14">
             <div class="grid grid-cols-1 lg:grid-cols-[5fr_1fr] gap-4 lg:gap-8 mb-20 lg:mb-8">
                 <div
                     class="flex flex-col justify-center items-start p-6 lg:p-12 rounded-xl bg-[var(--bg-primary3)] border border-[var(--bg-primary2)]/30 shadow-md">

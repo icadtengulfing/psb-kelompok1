@@ -2,8 +2,8 @@
 session_start();
 include '../koneksi.php';
 if (!isset($_SESSION['nik'])) {
-  header('Location: ../form-login.php');
-  exit;
+    header('Location: ../form-login.php');
+    exit;
 }
 $nama = $_SESSION['nama'] ?? 'Pengguna';
 $nik = $_SESSION['nik'] ?? '';
@@ -14,88 +14,64 @@ $query = "SELECT * FROM pendaftar WHERE nik = '$nik'";
 $result = mysqli_query($koneksi, $query);
 $user_data = mysqli_fetch_assoc($result);
 
-$foto_profil_path = (!empty($user_data['foto_profil']) && $user_data['foto_profil'] != 'default-profile.jpg') 
-                   ? "../uploads/" . $user_data['foto_profil'] 
-                   : "../../assets/img/default-profile.jpg";
-if(isset($_POST['daftar_siswa'])) {
-    
+$foto_profil_path = (!empty($user_data['foto_profil']) && $user_data['foto_profil'] != 'default-profile.jpg')
+    ? "../uploads/" . $user_data['foto_profil']
+    : "../../assets/img/default-profile.jpg";
+
+if (isset($_POST['daftar_siswa'])) {
     // Escape data untuk mencegah SQL injection
     $nik = mysqli_real_escape_string($koneksi, $nik);
 
     $query_pendaftar = "SELECT id_pendaftar FROM pendaftar WHERE nik = '$nik'";
     $result_pendaftar = mysqli_query($koneksi, $query_pendaftar);
 
-if (mysqli_num_rows($result_pendaftar) > 0) {
-    $row_pendaftar = mysqli_fetch_assoc($result_pendaftar);
-    $id_pendaftar = $row_pendaftar['id_pendaftar'];
-} else {
-    die("Error: Data pendaftar tidak ditemukan!");
-}
-
-$cek_jalur = mysqli_query($koneksi, "SELECT id_jalur FROM jalur_pendaftaran WHERE jenis_jalur = 'Reguler' LIMIT 1");
-
-if (mysqli_num_rows($cek_jalur) > 0) {
-    $row = mysqli_fetch_assoc($cek_jalur);
-    $id_jalur = $row['id_jalur'];
-} else {
-    // Jika belum ada, insert dulu
-    mysqli_query($koneksi, "INSERT INTO jalur_pendaftaran (jenis_jalur) VALUES ('Reguler')");
-    $id_jalur = mysqli_insert_id($koneksi);
-}
-
-// Data siswa - escape semua input
-$nis = mysqli_real_escape_string($koneksi, $_POST['nis']);
-$nama_lengkap_siswa = mysqli_real_escape_string($koneksi, $_POST['nama_lengkap_siswa']);
-$nik_siswa = mysqli_real_escape_string($koneksi, $_POST['nik_siswa']);
-$nisn = mysqli_real_escape_string($koneksi, $_POST['nisn']);
-$asal_sekolah = mysqli_real_escape_string($koneksi, $_POST['asal_sekolah']);
-$alamat = mysqli_real_escape_string($koneksi, $_POST['alamat']);
-$tempat_lahir = mysqli_real_escape_string($koneksi, $_POST['tempat_lahir']);
-$tanggal_lahir = $_POST['tanggal_lahir'];
-
-$tanggal_lahir_mysql = NULL; 
-
-if (!empty($tanggal_lahir)) {
-    $timestamp = strtotime($tanggal_lahir);
-
-    if ($timestamp !== false) {
-        $tanggal_lahir_mysql = date('Y-m-d', $timestamp);
-    }
-}
-
-$query_siswa = "INSERT INTO siswa (nis, id_pendaftar, id_jalur, nama_lengkap_siswa, nik_siswa, nisn, asal_sekolah, alamat, tempat_lahir, tanggal_lahir) 
-                VALUES ('$nis', '$id_pendaftar', '$id_jalur', '$nama_lengkap_siswa', '$nik_siswa', '$nisn', '$asal_sekolah', '$alamat', '$tempat_lahir', '$tanggal_lahir_mysql')";
-$result = mysqli_query($koneksi, $query_siswa);
-
-if ($result) {
-    $_SESSION['alert_message'] = 
-     '<div id="alert-3" class="flex items-center p-4 mb-4 text-green-700 rounded-lg bg-green-100 border border-green-200" role="alert">
-  <svg class="shrink-0 w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-    <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-  </svg>
-  <span class="sr-only">Info</span>
-  <div class="ms-3 text-md font-medium">
-    Data Berhasil Dikirim!
-  </div>
-  <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-green-100 text-green-600 rounded-lg focus:ring-2 focus:ring-green-300 p-1.5 hover:bg-green-200 inline-flex items-center justify-center h-8 w-8" data-dismiss-target="#alert-3" aria-label="Close">
-    <span class="sr-only">Close</span>
-    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-    </svg>
-  </button>
-</div>';
+    if (mysqli_num_rows($result_pendaftar) > 0) {
+        $row_pendaftar = mysqli_fetch_assoc($result_pendaftar);
+        $id_pendaftar = $row_pendaftar['id_pendaftar'];
     } else {
-        $_SESSION['alert_message'] = '<div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Gagal!</strong> Terjadi kesalahan saat memperbarui data.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>';
+        die("Error: Data pendaftar tidak ditemukan!");
     }
-    header("Location: reguler.php");
-    exit;
+
+    $cek_jalur = mysqli_query($koneksi, "SELECT id_jalur FROM jalur_pendaftaran WHERE jenis_jalur = 'Reguler' LIMIT 1");
+
+    if (mysqli_num_rows($cek_jalur) > 0) {
+        $row = mysqli_fetch_assoc($cek_jalur);
+        $id_jalur = $row['id_jalur'];
+    } else {
+        // Jika belum ada, insert dulu
+        mysqli_query($koneksi, "INSERT INTO jalur_pendaftaran (jenis_jalur) VALUES ('Reguler')");
+        $id_jalur = mysqli_insert_id($koneksi);
+    }
+
+    // Data siswa - escape semua input
+    $nis = mysqli_real_escape_string($koneksi, $_POST['nis']);
+    $nama_lengkap_siswa = mysqli_real_escape_string($koneksi, $_POST['nama_lengkap_siswa']);
+    $nik_siswa = mysqli_real_escape_string($koneksi, $_POST['nik_siswa']);
+    $nisn = mysqli_real_escape_string($koneksi, $_POST['nisn']);
+    $asal_sekolah = mysqli_real_escape_string($koneksi, $_POST['asal_sekolah']);
+    $alamat = mysqli_real_escape_string($koneksi, $_POST['alamat']);
+    $tempat_lahir = mysqli_real_escape_string($koneksi, $_POST['tempat_lahir']);
+    $tanggal_lahir = $_POST['tanggal_lahir'];
+
+    $tanggal_lahir_mysql = NULL;
+
+    if (!empty($tanggal_lahir)) {
+        $timestamp = strtotime($tanggal_lahir);
+
+        if ($timestamp !== false) {
+            $tanggal_lahir_mysql = date('Y-m-d', $timestamp);
+        }
+    }
+
+    $query_siswa = "INSERT INTO siswa (nis, id_pendaftar, id_jalur, nama_lengkap_siswa, nik_siswa, nisn, asal_sekolah, alamat, tempat_lahir, tanggal_lahir) 
+                VALUES ('$nis', '$id_pendaftar', '$id_jalur', '$nama_lengkap_siswa', '$nik_siswa', '$nisn', '$asal_sekolah', '$alamat', '$tempat_lahir', '$tanggal_lahir_mysql')";
+    $result = mysqli_query($koneksi, $query_siswa);
+
+    if ($result) {
 
     $input_files = [
         'kartuKeluarga' => 'Kartu Keluarga',
-        'ijazahSmp' => 'Ijazah SMP', 
+        'ijazahSmp' => 'Ijazah SMP',
         'SKL' => 'Surat Keterangan Lulus',
         'akteLahir' => 'Akte Lahir',
         'pasFoto' => 'Pas Foto',
@@ -107,19 +83,20 @@ if ($result) {
     $upload_success = [];
 
     foreach ($input_files as $input_name => $jenis_dokumen) {
+        $nik = $_SESSION['nik']; 
         if (isset($_FILES[$input_name]) && $_FILES[$input_name]['error'] === 0) {
 
             $base_dir = "uploads/dokumen/";
             $jenis_folder = strtolower(str_replace(' ', '_', $jenis_dokumen));
             $target_dir = $base_dir . $jenis_folder . "/";
-            
+
             if (!file_exists($target_dir)) {
                 mkdir($target_dir, 0755, true);
             }
-            
+
             // DIPERBAIKI: Gunakan $input_name, bukan 'dokumen'
             $file_ext = strtolower(pathinfo($_FILES[$input_name]['name'], PATHINFO_EXTENSION));
-            
+
             // Validasi ekstensi file
             $allowed_extensions = ['jpg', 'jpeg', 'png', 'pdf'];
             if (!in_array($file_ext, $allowed_extensions)) {
@@ -132,7 +109,7 @@ if ($result) {
                 $upload_errors[] = "Ukuran file $jenis_dokumen terlalu besar.";
                 continue;
             }
-            
+
             $new_filename = $nis . '_' . $input_name . '_' . time() . '.' . $file_ext;
             $file_path = $target_dir . $new_filename;
 
@@ -142,23 +119,41 @@ if ($result) {
                 $nis_escaped = mysqli_real_escape_string($koneksi, $nis);
                 $jenis_dokumen_escaped = mysqli_real_escape_string($koneksi, $jenis_dokumen);
                 $file_path_escaped = mysqli_real_escape_string($koneksi, $file_path);
-                
+
                 // Insert ke database
-                $query_dokumen = "INSERT INTO dokumen (nis, jenis_dokumen, file_path, tanggal_upload, status_verifikasi) 
-                            VALUES ('$nis_escaped', '$jenis_dokumen_escaped', '$file_path_escaped', NOW(), 'Menunggu')";
+                $query_dokumen = "INSERT INTO dokumen (nis, nik, jenis_dokumen, file_path, tanggal_upload, status_verifikasi, id_jalur) 
+                            VALUES ('$nis_escaped', '$nik', '$jenis_dokumen_escaped', '$file_path_escaped', NOW(), 'Menunggu', $id_jalur)";
                 $result_dokumen = mysqli_query($koneksi, $query_dokumen);
-                
+
                 if ($result_dokumen) {
                     $upload_success[] = $jenis_dokumen;
                 } else {
                     $upload_errors[] = "Gagal menyimpan data $jenis_dokumen: " . mysqli_error($koneksi);
                 }
             } else {
-                $upload_errors[] = "Gagal mengupload file $jenis_dokumen!"; 
-           }
-         }
-       }
-   }
+                $upload_errors[] = "Gagal mengupload file $jenis_dokumen!";
+            }
+        }
+        $_SESSION['alert_message'] = '<div id="alert-3" class="flex items-center p-4 mb-4 text-green-800 rounded-lg bg-green-50 border border-green-300" role="alert">
+ <svg class="shrink-0 w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+   <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+ </svg>
+ <span class="sr-only">Info</span>
+ <div class="ms-3 text-sm font-medium">
+   Data berhasil dikirim dan sedang dalam proses verifikasi. Silakan tunggu konfirmasi selanjutnya.
+ </div>
+ <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-green-50 text-green-500 rounded-lg focus:ring-2 focus:ring-green-400 p-1.5 hover:bg-green-200 inline-flex items-center justify-center h-8 w-8" data-dismiss-target="#alert-3" aria-label="Close">
+   <span class="sr-only">Close</span>
+   <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+   </svg>
+ </button>
+</div>';
+header("Location: reguler.php");
+exit;
+    }
+    }
+}
 ?>
 <!doctype html>
 <html>
@@ -271,7 +266,7 @@ if ($result) {
             <ul class="space-y-3 font-medium">
                 <h1 class="text-lg md:text-xl font-bold text-[var(--txt-primary2)]">Menu Utama</h1>
                 <li>
-                        <a href="../index.php"
+                    <a href="../index.php"
                         class="flex items-center py-2 px-4 text-[var(--txt-primary)] rounded-lg hover:bg-[var(--bg-primary2)]/10 group transition duration-200">
                         <svg class="w-6 h-6 text-[var(--txt-primary)]/70 transition duration-75 group-hover:text-[var(--txt-primary)]"
                             aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -342,16 +337,14 @@ if ($result) {
                 </li>
             </ul>
             <div
-          class="absolute bottom-2 left-0 w-full border-t border-[var(--bg-primary)]/20 bg-transparent px-4 py-4"
-        >
-          <hr class="h-px my-4 bg-[var(--txt-primary)]/20 border-0" />
-          <button
-            type="button"
-            onclick="window.location.href='../edit-profile.php'" 
-            class="cursor-pointer flex items-center w-full text-sm rounded-xl hover:shadow-md group hover:bg-[var(--bg-primary2)]/10 px-4 py-3 transition duration-400"
-            data-dropdown-toggle="dropdown-user-sidebar"
-          >
-          <img class="w-8 h-8 rounded-full me-3 shadow-md" src="<?php echo htmlspecialchars($foto_profil_path); ?>"
+                class="absolute bottom-2 left-0 w-full border-t border-[var(--bg-primary)]/20 bg-transparent px-4 py-4">
+                <hr class="h-px my-4 bg-[var(--txt-primary)]/20 border-0" />
+                <button
+                    type="button"
+                    onclick="window.location.href='../edit-profile.php'"
+                    class="cursor-pointer flex items-center w-full text-sm rounded-xl hover:shadow-md group hover:bg-[var(--bg-primary2)]/10 px-4 py-3 transition duration-400"
+                    data-dropdown-toggle="dropdown-user-sidebar">
+                    <img class="w-8 h-8 rounded-full me-3 shadow-md" src="<?php echo htmlspecialchars($foto_profil_path); ?>"
                         alt="user photo">
                     <div class="flex flex-col">
                         <span class="text-[var(--txt-primary)] font-bold"><?php echo htmlspecialchars($user_data['nama_lengkap_ortu']); ?></span>
@@ -363,8 +356,8 @@ if ($result) {
                             d="M5.23 7.21a.75.75 0 011.06.02L10 11.585l3.71-4.356a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z"
                             clip-rule="evenodd" />
                     </svg> -->
-                </a>
-                <!-- <div class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 dark:divide-gray-600"
+                    </a>
+                    <!-- <div class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 dark:divide-gray-600"
                     id="dropdown-user-sidebar">
                     <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownUserButton">
                         <li><a href="#"
@@ -401,13 +394,13 @@ if ($result) {
     <section class="p-4 lg:p-8 sm:ml-64">
         <div class="mt-26 lg:mt-24">
             <?php if (isset($_SESSION['alert_message'])): ?>
-            <div class="alert-message w-full mb-4">
-                <?php 
-                echo $_SESSION['alert_message']; 
-                unset($_SESSION['alert_message']); // Hapus pesan setelah ditampilkan
-                ?>
-            </div>
-        <?php endif; ?>
+                <div class="alert-message w-full mb-4">
+                    <?php
+                    echo $_SESSION['alert_message'];
+                    unset($_SESSION['alert_message']); // Hapus pesan setelah ditampilkan
+                    ?>
+                </div>
+            <?php endif; ?>
             <div class="grid grid-cols-1 xl:grid-cols-[3fr_1fr] gap-4 lg:gap-8 mb-8">
                 <div
                     class="flex flex-col justify-center items-start p-6 lg:p-12 rounded-xl bg-[var(--bg-primary3)] border border-[var(--bg-primary2)]/30 shadow-md">
@@ -424,7 +417,7 @@ if ($result) {
             </div>
             <div class="flex flex-col gap-8 mb-8">
                 <form class="max-w-4xl" method="post" enctype="multipart/form-data">
-                <div class="mb-5">
+                    <div class="mb-5">
                         <label for="nis" class="block mb-2 text-md md:text-lg font-medium text-[var(--txt-primary)]">
                             NIS
                         </label>
@@ -670,7 +663,8 @@ if ($result) {
                     </div>
                     <button type="submit" name="daftar_siswa"
                         class="text-white bg-[var(--bg-primary2)] hover:bg-[var(--bg-secondary)] focus:ring-3 focus:outline-none focus:ring-[var(--bg-primary3)] font-bold rounded-lg text-lg w-full px-5 py-2.5 text-center cursor-pointer shadow-lg transition duration-300">Kirim</button>
-                </method=>
+                    </method=>
+                </form>
             </div>
         </div>
     </section>
@@ -693,4 +687,5 @@ if ($result) {
     </script>
 
 </body>
+
 </html>
