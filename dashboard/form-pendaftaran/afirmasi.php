@@ -39,9 +39,6 @@ if (isset($_POST['daftar_siswa'])) {
     if (mysqli_num_rows($cek_jalur) > 0) {
         $row = mysqli_fetch_assoc($cek_jalur);
         $id_jalur = $row['id_jalur'];
-    } else {
-        mysqli_query($koneksi, "INSERT INTO jalur_pendaftaran (jenis_jalur) VALUES ('Afirmasi')");
-        $id_jalur = mysqli_insert_id($koneksi);
     }
 
     // Data siswa - escape semua input

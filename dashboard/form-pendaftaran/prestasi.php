@@ -39,10 +39,6 @@ $cek_jalur = mysqli_query($koneksi, "SELECT id_jalur FROM jalur_pendaftaran WHER
 if (mysqli_num_rows($cek_jalur) > 0) {
     $row = mysqli_fetch_assoc($cek_jalur);
     $id_jalur = $row['id_jalur'];
-} else {
-    // Jika belum ada, insert dulu
-    mysqli_query($koneksi, "INSERT INTO jalur_pendaftaran (jenis_jalur) VALUES ('Prestasi')");
-    $id_jalur = mysqli_insert_id($koneksi);
 }
 
 // Data siswa - escape semua input
