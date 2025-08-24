@@ -245,8 +245,7 @@ $foto_profil_path = (!empty($user_data['foto_profil']) && $user_data['foto_profi
     <div
         class="fixed top-16 sm:top-14 w-full overflow-hidden whitespace-nowrap bg-[var(--bg-primary2)] text-[var(--txt-primary)]">
         <div class="animate-marquee px-6 py-2 text-md sm:text-base text-[var(--txt-secondary)]">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Cum reiciendis est corporis perspiciatis
-            maxime unde atque temporibus inventore quibusdam architecto.
+        !! Penerimaan Peserta Didik Baru Tahun Ajaran 2025/2026 Telah Dibuka - Segera Daftarkan Putra-Putri Anda di SMA Global Prestasi !!
         </div>
     </div>
 
